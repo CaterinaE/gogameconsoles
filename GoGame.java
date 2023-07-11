@@ -10,12 +10,14 @@ public class GoGame {
     private int consecutivePasses;
     private double komi;
     private int stonesCapturedX, stonesCapturedO;
+    private char[][] previousBoard; // keep track of previous board positions
 
     public GoGame(int size, double komi) {
         this.size = size;
         this.komi = komi;
         board = new char[size][size];
         currentPlayer = 'O'; // Black goes first
+        previousBoard = new char[size][size];
     }
 
     public void play() {
@@ -90,37 +92,49 @@ public class GoGame {
         if (row < 0 || row >= size || col < 0 || col >= size) {
             return false;
         }
-        return board[row][col] == '.';
+        if (board[row][col] != '.') {
+            return false;
+        }
+        // Create a temporary board to compare with previous board
+        char[][] tempBoard = new char[size][size];
+        for (int i = 0; i < size; i++) {
+            tempBoard[i] = Arrays.copyOf(board[i], size);
+        }
+        // Check if the temporary board matches the previous board
+        return !Arrays.deepEquals(tempBoard, previousBoard);
     }
 
     private void makeMove(int row, int col) {
         board[row][col] = currentPlayer;
+        // Update previous board
+        for (int i = 0; i < size; i++) {
+            previousBoard[i] = Arrays.copyOf(board[i], size);
+        }
     }
-
     private void captureStones(int row, int col) {
-        char opponentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
+    char opponentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
 
-        if (row > 0 && board[row - 1][col] == opponentPlayer) {
-            if (isCaptured(row - 1, col)) {
-                stonesCapturedO += removeCapturedStones(row - 1, col);
-            }
-        }
-        if (row < size - 1 && board[row + 1][col] == opponentPlayer) {
-            if (isCaptured(row + 1, col)) {
-                stonesCapturedO += removeCapturedStones(row + 1, col);
-            }
-        }
-        if (col > 0 && board[row][col - 1] == opponentPlayer) {
-            if (isCaptured(row, col - 1)) {
-                stonesCapturedO += removeCapturedStones(row, col - 1);
-            }
-        }
-        if (col < size - 1 && board[row][col + 1] == opponentPlayer) {
-            if (isCaptured(row, col + 1)) {
-                stonesCapturedO += removeCapturedStones(row, col + 1);
-            }
+    if (row > 0 && board[row - 1][col] == opponentPlayer) {
+        if (isCaptured(row - 1, col)) {
+            stonesCapturedO += removeCapturedStones(row - 1, col);
         }
     }
+    if (row < size - 1 && board[row + 1][col] == opponentPlayer) {
+        if (isCaptured(row + 1, col)) {
+            stonesCapturedO += removeCapturedStones(row + 1, col);
+        }
+    }
+    if (col > 0 && board[row][col - 1] == opponentPlayer) {
+        if (isCaptured(row, col - 1)) {
+            stonesCapturedO += removeCapturedStones(row, col - 1);
+        }
+    }
+    if (col < size - 1 && board[row][col + 1] == opponentPlayer) {
+        if (isCaptured(row, col + 1)) {
+            stonesCapturedO += removeCapturedStones(row, col + 1);
+        }
+    }
+}
 
     private boolean isCaptured(int row, int col) {
         char player = board[row][col];
@@ -183,10 +197,10 @@ public class GoGame {
 
         if (scoreX + komi > scoreO) {
             System.out.println("White (X) wins!");
-        } else if (scoreX + komi < scoreO) {
+        } 
+        
+        else  {
             System.out.println("Black (O) wins!");
-        } else {
-            System.out.println("The game ended in a tie!");
         }
 
         gameEnded = true;
