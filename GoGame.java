@@ -95,13 +95,63 @@ public class GoGame {
         if (board[row][col] != '.') {
             return false;
         }
-        // Create a temporary board to compare with previous board
+
+        // Create a temporary board to compare with the previous board
         char[][] tempBoard = new char[size][size];
         for (int i = 0; i < size; i++) {
             tempBoard[i] = Arrays.copyOf(board[i], size);
         }
-        // Check if the temporary board matches the previous board
-        return !Arrays.deepEquals(tempBoard, previousBoard);
+
+        // Make the move on the temporary board
+        tempBoard[row][col] = currentPlayer;
+
+        // Check if the temporary board matches the previous board and if it results in self-capture or violates the ko rule
+        return !Arrays.deepEquals(tempBoard, previousBoard) && !isSelfCapture(row, col, tempBoard) && !isKoRuleViolation(tempBoard);
+    }
+
+    private boolean isSelfCapture(int row, int col, char[][] tempBoard) {
+        // Check if the move results in self-capture
+        char opponentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
+
+        // Check if there is at least one neighboring opponent stone
+        boolean hasOpponentNeighbor =
+                (row > 0 && tempBoard[row - 1][col] == opponentPlayer) ||
+                (row < size - 1 && tempBoard[row + 1][col] == opponentPlayer) ||
+                (col > 0 && tempBoard[row][col - 1] == opponentPlayer) ||
+                (col < size - 1 && tempBoard[row][col + 1] == opponentPlayer);
+
+        // Check if self-capture occurs only when there is at least one neighboring opponent stone
+        return hasOpponentNeighbor && isCaptured(row, col, tempBoard);
+    }
+
+    private boolean isKoRuleViolation(char[][] tempBoard) {
+        // Check if the current board position matches the previous board position
+        return Arrays.deepEquals(tempBoard, previousBoard);
+    }
+
+    private boolean isCaptured(int row, int col, char[][] tempBoard) {
+        char player = tempBoard[row][col];
+        boolean[][] visited = new boolean[size][size];
+        return !hasLiberty(row, col, player, visited, tempBoard);
+    }
+
+    private boolean hasLiberty(int row, int col, char player, boolean[][] visited, char[][] tempBoard) {
+        if (row < 0 || row >= size || col < 0 || col >= size || visited[row][col]) {
+            return false;
+        }
+        if (tempBoard[row][col] == '.') {
+            return true;
+        }
+        if (tempBoard[row][col] != player) {
+            return false;
+        }
+
+        visited[row][col] = true;
+
+        return hasLiberty(row - 1, col, player, visited, tempBoard)
+                || hasLiberty(row + 1, col, player, visited, tempBoard)
+                || hasLiberty(row, col - 1, player, visited, tempBoard)
+                || hasLiberty(row, col + 1, player, visited, tempBoard);
     }
 
     private void makeMove(int row, int col) {
@@ -111,54 +161,30 @@ public class GoGame {
             previousBoard[i] = Arrays.copyOf(board[i], size);
         }
     }
+
     private void captureStones(int row, int col) {
-    char opponentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
+        char opponentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
 
-    if (row > 0 && board[row - 1][col] == opponentPlayer) {
-        if (isCaptured(row - 1, col)) {
-            stonesCapturedO += removeCapturedStones(row - 1, col);
+        if (row > 0 && board[row - 1][col] == opponentPlayer) {
+            if (isCaptured(row - 1, col, board)) {
+                stonesCapturedO += removeCapturedStones(row - 1, col);
+            }
         }
-    }
-    if (row < size - 1 && board[row + 1][col] == opponentPlayer) {
-        if (isCaptured(row + 1, col)) {
-            stonesCapturedO += removeCapturedStones(row + 1, col);
+        if (row < size - 1 && board[row + 1][col] == opponentPlayer) {
+            if (isCaptured(row + 1, col, board)) {
+                stonesCapturedO += removeCapturedStones(row + 1, col);
+            }
         }
-    }
-    if (col > 0 && board[row][col - 1] == opponentPlayer) {
-        if (isCaptured(row, col - 1)) {
-            stonesCapturedO += removeCapturedStones(row, col - 1);
+        if (col > 0 && board[row][col - 1] == opponentPlayer) {
+            if (isCaptured(row, col - 1, board)) {
+                stonesCapturedO += removeCapturedStones(row, col - 1);
+            }
         }
-    }
-    if (col < size - 1 && board[row][col + 1] == opponentPlayer) {
-        if (isCaptured(row, col + 1)) {
-            stonesCapturedO += removeCapturedStones(row, col + 1);
+        if (col < size - 1 && board[row][col + 1] == opponentPlayer) {
+            if (isCaptured(row, col + 1, board)) {
+                stonesCapturedO += removeCapturedStones(row, col + 1);
+            }
         }
-    }
-}
-
-    private boolean isCaptured(int row, int col) {
-        char player = board[row][col];
-        boolean[][] visited = new boolean[size][size];
-        return !hasLiberty(row, col, player, visited);
-    }
-
-    private boolean hasLiberty(int row, int col, char player, boolean[][] visited) {
-        if (row < 0 || row >= size || col < 0 || col >= size || visited[row][col]) {
-            return false;
-        }
-        if (board[row][col] == '.') {
-            return true;
-        }
-        if (board[row][col] != player) {
-            return false;
-        }
-
-        visited[row][col] = true;
-
-        return hasLiberty(row - 1, col, player, visited)
-                || hasLiberty(row + 1, col, player, visited)
-                || hasLiberty(row, col - 1, player, visited)
-                || hasLiberty(row, col + 1, player, visited);
     }
 
     private int removeCapturedStones(int row, int col) {
@@ -197,9 +223,7 @@ public class GoGame {
 
         if (scoreX + komi > scoreO) {
             System.out.println("White (X) wins!");
-        } 
-        
-        else  {
+        } else {
             System.out.println("Black (O) wins!");
         }
 
@@ -236,8 +260,6 @@ public class GoGame {
             }
             System.out.println();
         }
-        System.out.println();
-        System.out.println("Current Player: " + currentPlayer);
         System.out.println("Now it's " + ((currentPlayer == 'X') ? "White" : "Black") + " stone's move.");
         System.out.println("White (X) Stones Captured: " + stonesCapturedX);
         System.out.println("Black (O) Stones Captured: " + stonesCapturedO);
