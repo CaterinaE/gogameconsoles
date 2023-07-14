@@ -23,12 +23,6 @@ public class GoGame {
     public void play() {
         Scanner scanner = new Scanner(System.in);
 
-        // Select board size
-        System.out.print("Enter board size (e.g., 9): ");
-        size = scanner.nextInt();
-        //board size
-        board = new char[size][size];
-
         initializeBoard();
         consecutivePasses = 0;
         stonesCapturedX = 0;
@@ -176,6 +170,7 @@ public class GoGame {
         return 0;
     }
 
+    // fills in board
     private void initializeBoard() {
         for (int i = 0; i < size; i++) {
             Arrays.fill(board[i], '.');
