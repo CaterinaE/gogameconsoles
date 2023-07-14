@@ -36,12 +36,17 @@ public class GoGame {
 
         while (!gameEnded) {
             System.out.println("Current Player: " + currentPlayer);
-            System.out.print("Enter row (0-" + (size - 1) + ") or 'e' to end the game: ");
+            System.out.print("Enter row (0-" + (size - 1) + ") or 'e' to end the game, or 'a' for AI help: ");
             String input = scanner.next();
 
             if (input.equals("e")) {
                 declareWinner();
                 break;
+            }
+
+            if (input.equals("a")) {
+                provideAIHelp();
+                continue;
             }
 
             int row;
@@ -82,6 +87,95 @@ public class GoGame {
         scanner.close();
     }
 
+    private void provideAIHelp() {
+        System.out.println("AI is analyzing the board...");
+
+        // Create a temporary board to simulate possible moves
+        char[][] tempBoard = new char[size][size];
+        for (int i = 0; i < size; i++) {
+            tempBoard[i] = Arrays.copyOf(board[i], size);
+        }
+
+        int bestRow = -1;
+        int bestCol = -1;
+        int maxCapturedStones = 0;
+
+        // Simulate placing a stone on each empty position and calculate the number of captured stones
+        for (int row = 0; row < size; row++) {
+            for (int col = 0; col < size; col++) {
+                if (tempBoard[row][col] == '.') {
+                    tempBoard[row][col] = currentPlayer;
+                    int capturedStones = simulateCaptureStones(row, col, tempBoard);
+
+                    if (capturedStones > maxCapturedStones) {
+                        bestRow = row;
+                        bestCol = col;
+                        maxCapturedStones = capturedStones;
+                    }
+
+                    // Reset the temporary board
+                    tempBoard[row][col] = '.';
+                }
+            }
+        }
+
+        if (bestRow != -1 && bestCol != -1) {
+            System.out.println("AI suggests placing a stone at row " + bestRow + ", col " + bestCol);
+        } else {
+            System.out.println("AI suggests passing the turn.");
+        }
+    }
+
+    private int simulateCaptureStones(int row, int col, char[][] tempBoard) {
+        char opponentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
+
+        int capturedStones = 0;
+
+        if (row > 0 && tempBoard[row - 1][col] == opponentPlayer) {
+            if (isCaptured(row - 1, col, tempBoard)) {
+                capturedStones += removeCapturedStones(row - 1, col, tempBoard);
+            }
+        }
+        if (row < size - 1 && tempBoard[row + 1][col] == opponentPlayer) {
+            if (isCaptured(row + 1, col, tempBoard)) {
+                capturedStones += removeCapturedStones(row + 1, col, tempBoard);
+            }
+        }
+        if (col > 0 && tempBoard[row][col - 1] == opponentPlayer) {
+            if (isCaptured(row, col - 1, tempBoard)) {
+                capturedStones += removeCapturedStones(row, col - 1, tempBoard);
+            }
+        }
+        if (col < size - 1 && tempBoard[row][col + 1] == opponentPlayer) {
+            if (isCaptured(row, col + 1, tempBoard)) {
+                capturedStones += removeCapturedStones(row, col + 1, tempBoard);
+            }
+        }
+
+        return capturedStones;
+    }
+
+    private int removeCapturedStones(int row, int col, char[][] tempBoard) {
+        char player = tempBoard[row][col];
+        boolean[][] visited = new boolean[size][size];
+        return removeCapturedStonesHelper(row, col, player, visited, tempBoard);
+    }
+
+    private int removeCapturedStonesHelper(int row, int col, char player, boolean[][] visited, char[][] tempBoard) {
+        if (row < 0 || row >= size || col < 0 || col >= size || visited[row][col]) {
+            return 0;
+        }
+        if (tempBoard[row][col] == player) {
+            tempBoard[row][col] = '.';
+            visited[row][col] = true;
+            return 1 + removeCapturedStonesHelper(row - 1, col, player, visited, tempBoard)
+                    + removeCapturedStonesHelper(row + 1, col, player, visited, tempBoard)
+                    + removeCapturedStonesHelper(row, col - 1, player, visited, tempBoard)
+                    + removeCapturedStonesHelper(row, col + 1, player, visited, tempBoard);
+        }
+        return 0;
+    }
+
     private void initializeBoard() {
         for (int i = 0; i < size; i++) {
             Arrays.fill(board[i], '.');
@@ -106,7 +200,27 @@ public class GoGame {
         tempBoard[row][col] = currentPlayer;
 
         // Check if the temporary board matches the previous board and if it results in self-capture or violates the ko rule
-        return !Arrays.deepEquals(tempBoard, previousBoard) && !isSelfCapture(row, col, tempBoard) && !isKoRuleViolation(tempBoard);
+        return !Arrays.deepEquals(tempBoard, previousBoard) && (capturesOpponentStones(row, col, tempBoard) || !isSelfCapture(row, col, tempBoard)) && !isKoRuleViolation(tempBoard);
+    }
+
+    private boolean capturesOpponentStones(int row, int col, char[][] tempBoard) {
+        // Check if the move captures at least one opponent stone
+        char opponentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
+
+        if (row > 0 && tempBoard[row - 1][col] == opponentPlayer && isCaptured(row - 1, col, tempBoard)) {
+            return true;
+        }
+        if (row < size - 1 && tempBoard[row + 1][col] == opponentPlayer && isCaptured(row + 1, col, tempBoard)) {
+            return true;
+        }
+        if (col > 0 && tempBoard[row][col - 1] == opponentPlayer && isCaptured(row, col - 1, tempBoard)) {
+            return true;
+        }
+        if (col < size - 1 && tempBoard[row][col + 1] == opponentPlayer && isCaptured(row, col + 1, tempBoard)) {
+            return true;
+        }
+
+        return false;
     }
 
     private boolean isSelfCapture(int row, int col, char[][] tempBoard) {
@@ -116,9 +230,9 @@ public class GoGame {
         // Check if there is at least one neighboring opponent stone
         boolean hasOpponentNeighbor =
                 (row > 0 && tempBoard[row - 1][col] == opponentPlayer) ||
-                (row < size - 1 && tempBoard[row + 1][col] == opponentPlayer) ||
-                (col > 0 && tempBoard[row][col - 1] == opponentPlayer) ||
-                (col < size - 1 && tempBoard[row][col + 1] == opponentPlayer);
+                        (row < size - 1 && tempBoard[row + 1][col] == opponentPlayer) ||
+                        (col > 0 && tempBoard[row][col - 1] == opponentPlayer) ||
+                        (col < size - 1 && tempBoard[row][col + 1] == opponentPlayer);
 
         // Check if self-capture occurs only when there is at least one neighboring opponent stone
         return hasOpponentNeighbor && isCaptured(row, col, tempBoard);
