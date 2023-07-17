@@ -29,7 +29,7 @@ public class GoGame {
         if (choice.equalsIgnoreCase("Y")) {
             System.out.println("Enter the initial board state (use '.' for empty spaces, 'X' for White, 'O' for Black):");
             for (int i = 0; i < size; i++) {
-                String rowInput = scanner.next();
+                String rowInput = scanner.next(); 
                 for (int j = 0; j < size; j++) {
                     board[i][j] = rowInput.charAt(j);
                 }
@@ -106,94 +106,124 @@ public class GoGame {
         scanner.close();
     }
 
-    private void provideAIHelp() {
-        System.out.println("AI is analyzing the board...");
+  private void provideAIHelp() {
+    System.out.println("AI is analyzing the board...");
 
-        // Create a temporary board to simulate possible moves
-        char[][] tempBoard = new char[size][size];
-        for (int i = 0; i < size; i++) {
-            tempBoard[i] = Arrays.copyOf(board[i], size);
-        }
+    // Create a temporary board to simulate possible moves
+    char[][] tempBoard = new char[size][size];
+    for (int i = 0; i < size; i++) {
+        tempBoard[i] = Arrays.copyOf(board[i], size);
+    }
 
-        int bestRow = -1;
-        int bestCol = -1;
-        int maxCapturedStones = 0;
+    int bestRow = -1;
+    int bestCol = -1;
+    int maxScore = 0;
 
-        // Simulate placing a stone on each empty position and calculate the number of captured stones
-        for (int row = 0; row < size; row++) {
-            for (int col = 0; col < size; col++) {
-                if (tempBoard[row][col] == '.') {
-                    tempBoard[row][col] = currentPlayer;
-                    int capturedStones = simulateCaptureStones(row, col, tempBoard);
+    // Simulate placing a stone on each empty position and calculate the score
+    for (int row = 0; row < size; row++) {
+        for (int col = 0; col < size; col++) {
+            if (tempBoard[row][col] == '.') {
+                tempBoard[row][col] = currentPlayer;
+                int score = evaluateMove(row, col, tempBoard);
 
-                    if (capturedStones > maxCapturedStones) {
-                        bestRow = row;
-                        bestCol = col;
-                        maxCapturedStones = capturedStones;
-                    }
-
-                    // Reset the temporary board
-                    tempBoard[row][col] = '.';
+                if (score > maxScore) {
+                    bestRow = row;
+                    bestCol = col;
+                    maxScore = score;
                 }
-            }
-        }
 
-        if (bestRow != -1 && bestCol != -1) {
-            System.out.println("AI suggests placing a stone at row " + bestRow + ", col " + bestCol);
-        } else {
-            System.out.println("AI suggests passing the turn.");
+                // Reset the temporary board
+                tempBoard[row][col] = '.';
+            }
         }
     }
 
-    private int simulateCaptureStones(int row, int col, char[][] tempBoard) {
-        char opponentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
+    if (bestRow != -1 && bestCol != -1) {
+        System.out.println("AI suggests placing a stone at row " + bestRow + ", col " + bestCol);
+    } else {
+        System.out.println("AI suggests passing the turn.");
+    }
+}
+ 
 
-        int capturedStones = 0;
+private int countLiberties(int row, int col, char[][] tempBoard) {
+    int liberties = 0;
 
-        if (row > 0 && tempBoard[row - 1][col] == opponentPlayer) {
-            if (isCaptured(row - 1, col, tempBoard)) {
-                capturedStones += removeCapturedStones(row - 1, col, tempBoard);
-            }
-        }
-        if (row < size - 1 && tempBoard[row + 1][col] == opponentPlayer) {
-            if (isCaptured(row + 1, col, tempBoard)) {
-                capturedStones += removeCapturedStones(row + 1, col, tempBoard);
-            }
-        }
-        if (col > 0 && tempBoard[row][col - 1] == opponentPlayer) {
-            if (isCaptured(row, col - 1, tempBoard)) {
-                capturedStones += removeCapturedStones(row, col - 1, tempBoard);
-            }
-        }
-        if (col < size - 1 && tempBoard[row][col + 1] == opponentPlayer) {
-            if (isCaptured(row, col + 1, tempBoard)) {
-                capturedStones += removeCapturedStones(row, col + 1, tempBoard);
-            }
-        }
-
-        return capturedStones;
+    if (row > 0 && tempBoard[row - 1][col] == '.') {
+        liberties++;
+    }
+    if (row < size - 1 && tempBoard[row + 1][col] == '.') {
+        liberties++;
+    }
+    if (col > 0 && tempBoard[row][col - 1] == '.') {
+        liberties++;
+    }
+    if (col < size - 1 && tempBoard[row][col + 1] == '.') {
+        liberties++;
     }
 
-    private int removeCapturedStones(int row, int col, char[][] tempBoard) {
-        char player = tempBoard[row][col];
-        boolean[][] visited = new boolean[size][size];
-        return removeCapturedStonesHelper(row, col, player, visited, tempBoard);
+    return liberties;
+}
+
+private int evaluateMove(int row, int col, char[][] tempBoard) {
+    int capturedStones = simulateCaptureStones(row, col, tempBoard);
+    int liberties = countLiberties(row, col, tempBoard);
+
+    // Assign a score based on the number of captured stones and liberties
+    int score = capturedStones * 2 + liberties;
+
+    return score;
+}
+
+private int simulateCaptureStones(int row, int col, char[][] tempBoard) {
+    char opponentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
+
+    int capturedStones = 0;
+
+    if (row > 0 && tempBoard[row - 1][col] == opponentPlayer) {
+        if (isCaptured(row - 1, col, tempBoard)) {
+            capturedStones += removeCapturedStones(row - 1, col, tempBoard);
+        }
+    }
+    if (row < size - 1 && tempBoard[row + 1][col] == opponentPlayer) {
+        if (isCaptured(row + 1, col, tempBoard)) {
+            capturedStones += removeCapturedStones(row + 1, col, tempBoard);
+        }
+    }
+    if (col > 0 && tempBoard[row][col - 1] == opponentPlayer) {
+        if (isCaptured(row, col - 1, tempBoard)) {
+            capturedStones += removeCapturedStones(row, col - 1, tempBoard);
+        }
+    }
+    if (col < size - 1 && tempBoard[row][col + 1] == opponentPlayer) {
+        if (isCaptured(row, col + 1, tempBoard)) {
+            capturedStones += removeCapturedStones(row, col + 1, tempBoard);
+        }
     }
 
-    private int removeCapturedStonesHelper(int row, int col, char player, boolean[][] visited, char[][] tempBoard) {
-        if (row < 0 || row >= size || col < 0 || col >= size || visited[row][col]) {
-            return 0;
-        }
-        if (tempBoard[row][col] == player) {
-            tempBoard[row][col] = '.';
-            visited[row][col] = true;
-            return 1 + removeCapturedStonesHelper(row - 1, col, player, visited, tempBoard)
-                    + removeCapturedStonesHelper(row + 1, col, player, visited, tempBoard)
-                    + removeCapturedStonesHelper(row, col - 1, player, visited, tempBoard)
-                    + removeCapturedStonesHelper(row, col + 1, player, visited, tempBoard);
-        }
+    return capturedStones;
+}
+
+private int removeCapturedStones(int row, int col, char[][] tempBoard) {
+    char player = tempBoard[row][col];
+    boolean[][] visited = new boolean[size][size];
+    return removeCapturedStonesHelper(row, col, player, visited, tempBoard);
+}
+
+private int removeCapturedStonesHelper(int row, int col, char player, boolean[][] visited, char[][] tempBoard) {
+    if (row < 0 || row >= size || col < 0 || col >= size || visited[row][col]) {
         return 0;
     }
+    if (tempBoard[row][col] == player) {
+        tempBoard[row][col] = '.';
+        visited[row][col] = true;
+        return 1 + removeCapturedStonesHelper(row - 1, col, player, visited, tempBoard)
+                + removeCapturedStonesHelper(row + 1, col, player, visited, tempBoard)
+                + removeCapturedStonesHelper(row, col - 1, player, visited, tempBoard)
+                + removeCapturedStonesHelper(row, col + 1, player, visited, tempBoard);
+    }
+    return 0;
+}
 
     private boolean isValidMove(int row, int col) {
         if (row < 0 || row >= size || col < 0 || col >= size) {
