@@ -23,7 +23,32 @@ public class GoGame {
     public void play() {
         Scanner scanner = new Scanner(System.in);
 
-        initializeBoard();
+        System.out.println("Do you want to enter the initial board state manually? (Y/N)");
+        String choice = scanner.next();
+
+        if (choice.equalsIgnoreCase("Y")) {
+            System.out.println("Enter the initial board state (use '.' for empty spaces, 'X' for White, 'O' for Black):");
+            for (int i = 0; i < size; i++) {
+                String rowInput = scanner.next();
+                for (int j = 0; j < size; j++) {
+                    board[i][j] = rowInput.charAt(j);
+                }
+            }
+        } else {
+            // Use predefined board
+            board = new char[][]{
+                {'.', '.', '.', '.', '.', '.', '.', '.', '.'},
+                {'.', '.', '.', '.', '.', '.', '.', '.', '.'},
+                {'.', '.', '.', '.', '.', '.', '.', '.', '.'},
+                {'.', '.', '.', '.', '.', '.', '.', '.', '.'},
+                {'.', '.', '.', '.', 'O', '.', '.', '.', '.'},
+                {'.', '.', '.', '.', '.', '.', '.', '.', '.'},
+                {'.', '.', '.', '.', '.', '.', '.', '.', '.'},
+                {'.', '.', '.', '.', '.', '.', '.', '.', 'X'},
+                {'.', '.', '.', '.', '.', '.', '.', 'X', '.'}
+            };
+        }
+
         consecutivePasses = 0;
         stonesCapturedX = 0;
         stonesCapturedO = 0;
@@ -168,13 +193,6 @@ public class GoGame {
                     + removeCapturedStonesHelper(row, col + 1, player, visited, tempBoard);
         }
         return 0;
-    }
-
-    // fills in board
-    private void initializeBoard() {
-        for (int i = 0; i < size; i++) {
-            Arrays.fill(board[i], '.');
-        }
     }
 
     private boolean isValidMove(int row, int col) {
