@@ -37,15 +37,15 @@ public class GoGame {
         } else {
             // Use predefined board
             board = new char[][]{
+                {'.', '.', '.', '.', '.', '.', 'O', '.', '.'},
+                {'.', '.', '.', '.', '.', '.', 'O', '.', '.'},
+                {'.', '.', '.', '.', '.', '.', 'O', '.', '.'},
+                {'.', '.', '.', '.', '.', '.', 'O', 'O', 'O'},
+                {'.', '.', '.', '.', 'O', '.', 'O', '.', '.'},
+                {'.', '.', '.', '.', '.', '.', 'O', 'O', 'O'},
                 {'.', '.', '.', '.', '.', '.', '.', '.', '.'},
-                {'.', '.', '.', '.', '.', '.', '.', '.', '.'},
-                {'.', '.', '.', '.', '.', '.', '.', '.', '.'},
-                {'.', '.', '.', '.', '.', '.', '.', '.', '.'},
-                {'.', '.', '.', '.', 'O', '.', '.', '.', '.'},
-                {'.', '.', '.', '.', '.', '.', '.', '.', '.'},
-                {'.', '.', '.', '.', '.', '.', '.', '.', '.'},
-                {'.', '.', '.', '.', '.', '.', '.', '.', 'X'},
-                {'.', '.', '.', '.', '.', '.', '.', 'X', '.'}
+                {'.', '.', '.', '.', '.', '.', '.', 'O', 'X'},
+                {'.', '.', '.', '.', '.', '.', 'O', 'X', '.'}
             };
         }
 
@@ -106,124 +106,94 @@ public class GoGame {
         scanner.close();
     }
 
-  private void provideAIHelp() {
-    System.out.println("AI is analyzing the board...");
+    private void provideAIHelp() {
+        System.out.println("AI is analyzing the board...");
 
-    // Create a temporary board to simulate possible moves
-    char[][] tempBoard = new char[size][size];
-    for (int i = 0; i < size; i++) {
-        tempBoard[i] = Arrays.copyOf(board[i], size);
-    }
+        // Create a temporary board to simulate possible moves
+        char[][] tempBoard = new char[size][size];
+        for (int i = 0; i < size; i++) {
+            tempBoard[i] = Arrays.copyOf(board[i], size);
+        }
 
-    int bestRow = -1;
-    int bestCol = -1;
-    int maxScore = 0;
+        int bestRow = -1;
+        int bestCol = -1;
+        int maxCapturedStones = 0;
 
-    // Simulate placing a stone on each empty position and calculate the score
-    for (int row = 0; row < size; row++) {
-        for (int col = 0; col < size; col++) {
-            if (tempBoard[row][col] == '.') {
-                tempBoard[row][col] = currentPlayer;
-                int score = evaluateMove(row, col, tempBoard);
+        // Simulate placing a stone on each empty position and calculate the number of captured stones
+        for (int row = 0; row < size; row++) {
+            for (int col = 0; col < size; col++) {
+                if (tempBoard[row][col] == '.') {
+                    tempBoard[row][col] = currentPlayer;
+                    int capturedStones = simulateCaptureStones(row, col, tempBoard);
 
-                if (score > maxScore) {
-                    bestRow = row;
-                    bestCol = col;
-                    maxScore = score;
+                    if (capturedStones > maxCapturedStones) {
+                        bestRow = row;
+                        bestCol = col;
+                        maxCapturedStones = capturedStones;
+                    }
+
+                    // Reset the temporary board
+                    tempBoard[row][col] = '.';
                 }
-
-                // Reset the temporary board
-                tempBoard[row][col] = '.';
             }
         }
-    }
 
-    if (bestRow != -1 && bestCol != -1) {
-        System.out.println("AI suggests placing a stone at row " + bestRow + ", col " + bestCol);
-    } else {
-        System.out.println("AI suggests passing the turn.");
-    }
-}
- 
-
-private int countLiberties(int row, int col, char[][] tempBoard) {
-    int liberties = 0;
-
-    if (row > 0 && tempBoard[row - 1][col] == '.') {
-        liberties++;
-    }
-    if (row < size - 1 && tempBoard[row + 1][col] == '.') {
-        liberties++;
-    }
-    if (col > 0 && tempBoard[row][col - 1] == '.') {
-        liberties++;
-    }
-    if (col < size - 1 && tempBoard[row][col + 1] == '.') {
-        liberties++;
-    }
-
-    return liberties;
-}
-
-private int evaluateMove(int row, int col, char[][] tempBoard) {
-    int capturedStones = simulateCaptureStones(row, col, tempBoard);
-    int liberties = countLiberties(row, col, tempBoard);
-
-    // Assign a score based on the number of captured stones and liberties
-    int score = capturedStones * 2 + liberties;
-
-    return score;
-}
-
-private int simulateCaptureStones(int row, int col, char[][] tempBoard) {
-    char opponentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
-
-    int capturedStones = 0;
-
-    if (row > 0 && tempBoard[row - 1][col] == opponentPlayer) {
-        if (isCaptured(row - 1, col, tempBoard)) {
-            capturedStones += removeCapturedStones(row - 1, col, tempBoard);
-        }
-    }
-    if (row < size - 1 && tempBoard[row + 1][col] == opponentPlayer) {
-        if (isCaptured(row + 1, col, tempBoard)) {
-            capturedStones += removeCapturedStones(row + 1, col, tempBoard);
-        }
-    }
-    if (col > 0 && tempBoard[row][col - 1] == opponentPlayer) {
-        if (isCaptured(row, col - 1, tempBoard)) {
-            capturedStones += removeCapturedStones(row, col - 1, tempBoard);
-        }
-    }
-    if (col < size - 1 && tempBoard[row][col + 1] == opponentPlayer) {
-        if (isCaptured(row, col + 1, tempBoard)) {
-            capturedStones += removeCapturedStones(row, col + 1, tempBoard);
+        if (bestRow != -1 && bestCol != -1) {
+            System.out.println("AI suggests placing a stone at row " + bestRow + ", col " + bestCol);
+        } else {
+            System.out.println("AI suggests passing the turn.");
         }
     }
 
-    return capturedStones;
-}
+    private int simulateCaptureStones(int row, int col, char[][] tempBoard) {
+        char opponentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
 
-private int removeCapturedStones(int row, int col, char[][] tempBoard) {
-    char player = tempBoard[row][col];
-    boolean[][] visited = new boolean[size][size];
-    return removeCapturedStonesHelper(row, col, player, visited, tempBoard);
-}
+        int capturedStones = 0;
 
-private int removeCapturedStonesHelper(int row, int col, char player, boolean[][] visited, char[][] tempBoard) {
-    if (row < 0 || row >= size || col < 0 || col >= size || visited[row][col]) {
+        if (row > 0 && tempBoard[row - 1][col] == opponentPlayer) {
+            if (isCaptured(row - 1, col, tempBoard)) {
+                capturedStones += removeCapturedStones(row - 1, col, tempBoard);
+            }
+        }
+        if (row < size - 1 && tempBoard[row + 1][col] == opponentPlayer) {
+            if (isCaptured(row + 1, col, tempBoard)) {
+                capturedStones += removeCapturedStones(row + 1, col, tempBoard);
+            }
+        }
+        if (col > 0 && tempBoard[row][col - 1] == opponentPlayer) {
+            if (isCaptured(row, col - 1, tempBoard)) {
+                capturedStones += removeCapturedStones(row, col - 1, tempBoard);
+            }
+        }
+        if (col < size - 1 && tempBoard[row][col + 1] == opponentPlayer) {
+            if (isCaptured(row, col + 1, tempBoard)) {
+                capturedStones += removeCapturedStones(row, col + 1, tempBoard);
+            }
+        }
+
+        return capturedStones;
+    }
+
+    private int removeCapturedStones(int row, int col, char[][] tempBoard) {
+        char player = tempBoard[row][col];
+        boolean[][] visited = new boolean[size][size];
+        return removeCapturedStonesHelper(row, col, player, visited, tempBoard);
+    }
+
+    private int removeCapturedStonesHelper(int row, int col, char player, boolean[][] visited, char[][] tempBoard) {
+        if (row < 0 || row >= size || col < 0 || col >= size || visited[row][col]) {
+            return 0;
+        }
+        if (tempBoard[row][col] == player) {
+            tempBoard[row][col] = '.';
+            visited[row][col] = true;
+            return 1 + removeCapturedStonesHelper(row - 1, col, player, visited, tempBoard)
+                    + removeCapturedStonesHelper(row + 1, col, player, visited, tempBoard)
+                    + removeCapturedStonesHelper(row, col - 1, player, visited, tempBoard)
+                    + removeCapturedStonesHelper(row, col + 1, player, visited, tempBoard);
+        }
         return 0;
     }
-    if (tempBoard[row][col] == player) {
-        tempBoard[row][col] = '.';
-        visited[row][col] = true;
-        return 1 + removeCapturedStonesHelper(row - 1, col, player, visited, tempBoard)
-                + removeCapturedStonesHelper(row + 1, col, player, visited, tempBoard)
-                + removeCapturedStonesHelper(row, col - 1, player, visited, tempBoard)
-                + removeCapturedStonesHelper(row, col + 1, player, visited, tempBoard);
-    }
-    return 0;
-}
 
     private boolean isValidMove(int row, int col) {
         if (row < 0 || row >= size || col < 0 || col >= size) {
@@ -312,37 +282,50 @@ private int removeCapturedStonesHelper(int row, int col, char player, boolean[][
     }
 
     private void makeMove(int row, int col) {
-        board[row][col] = currentPlayer;
-        // Update previous board
-        for (int i = 0; i < size; i++) {
-            previousBoard[i] = Arrays.copyOf(board[i], size);
+    board[row][col] = currentPlayer;
+    // Update previous board
+    for (int i = 0; i < size; i++) {
+        previousBoard[i] = Arrays.copyOf(board[i], size);
+    }
+    
+    
+}
+
+
+  private void captureStones(int row, int col) {
+    char opponentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
+
+    int stonesCaptured = 0; // Variable to keep track of the captured stones
+
+    if (row > 0 && board[row - 1][col] == opponentPlayer) {
+        if (isCaptured(row - 1, col)) {
+            stonesCaptured += removeCapturedStones(row - 1, col);
+        }
+    }
+    if (row < size - 1 && board[row + 1][col] == opponentPlayer) {
+        if (isCaptured(row + 1, col)) {
+            stonesCaptured += removeCapturedStones(row + 1, col);
+        }
+    }
+    if (col > 0 && board[row][col - 1] == opponentPlayer) {
+        if (isCaptured(row, col - 1)) {
+            stonesCaptured += removeCapturedStones(row, col - 1);
+        }
+    }
+    if (col < size - 1 && board[row][col + 1] == opponentPlayer) {
+        if (isCaptured(row, col + 1)) {
+            stonesCaptured += removeCapturedStones(row, col + 1);
         }
     }
 
-    private void captureStones(int row, int col) {
-        char opponentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
-
-        if (row > 0 && board[row - 1][col] == opponentPlayer) {
-            if (isCaptured(row - 1, col, board)) {
-                stonesCapturedO += removeCapturedStones(row - 1, col);
-            }
-        }
-        if (row < size - 1 && board[row + 1][col] == opponentPlayer) {
-            if (isCaptured(row + 1, col, board)) {
-                stonesCapturedO += removeCapturedStones(row + 1, col);
-            }
-        }
-        if (col > 0 && board[row][col - 1] == opponentPlayer) {
-            if (isCaptured(row, col - 1, board)) {
-                stonesCapturedO += removeCapturedStones(row, col - 1);
-            }
-        }
-        if (col < size - 1 && board[row][col + 1] == opponentPlayer) {
-            if (isCaptured(row, col + 1, board)) {
-                stonesCapturedO += removeCapturedStones(row, col + 1);
-            }
-        }
+    // Update the score for the appropriate player
+    if (currentPlayer == 'O') {
+        stonesCapturedX += stonesCaptured;
+    } else {
+        stonesCapturedO += stonesCaptured;
     }
+}
+
 
     private int removeCapturedStones(int row, int col) {
         char player = board[row][col];
@@ -365,48 +348,178 @@ private int removeCapturedStonesHelper(int row, int col, char player, boolean[][
         return 0;
     }
 
+    private boolean isCaptured(int row, int col) {
+        char player = board[row][col];
+        boolean[][] visited = new boolean[size][size];
+        return !hasLiberty(row, col, player, visited);
+    }
+
+    private boolean hasLiberty(int row, int col, char player, boolean[][] visited) {
+        if (row < 0 || row >= size || col < 0 || col >= size || visited[row][col]) {
+            return false;
+        }
+        if (board[row][col] == '.') {
+            return true;
+        }
+        if (board[row][col] != player) {
+            return false;
+        }
+
+        visited[row][col] = true;
+
+        return hasLiberty(row - 1, col, player, visited)
+                || hasLiberty(row + 1, col, player, visited)
+                || hasLiberty(row, col - 1, player, visited)
+                || hasLiberty(row, col + 1, player, visited);
+    }
+
+   
     private boolean isGameOver() {
         return consecutivePasses >= 2;
     }
 
-    private void declareWinner() {
-        updateScore();
-        System.out.println("Game Over!");
-        System.out.println("Final Score:");
-        System.out.println("White (X): " + scoreX + " points");
-        System.out.println("Black (O): " + scoreO + " points");
-        System.out.println("White (X) Stones Captured: " + stonesCapturedX);
-        System.out.println("Black (O) Stones Captured: " + stonesCapturedO);
+private void declareWinner() {
+    char[][] territories = calculateTerritories(); // Calculate the territories
+    int[] points = countTerritoryPoints(territories); // Count the territory points for each player
+    int territoryPointsX = points[0];
+    int territoryPointsO = points[1];
 
-        if (scoreX + komi > scoreO) {
-            System.out.println("White (X) wins!");
-        } else {
-            System.out.println("Black (O) wins!");
-        }
+    // Calculate the final score based on territory and captured stones
+     scoreX = territoryPointsX+komi - stonesCapturedX;
+      scoreO = territoryPointsO - stonesCapturedO;
 
-        gameEnded = true;
+    System.out.println("Game Over!");
+    System.out.println("Final Score:");
+    System.out.println("White (X) Territory Points: " + territoryPointsX);
+    System.out.println("White (X) Stones Captured: " + stonesCapturedX);
+    System.out.println("White (X) Score: " + scoreX);
+    System.out.println("Black (O) Territory Points: " + territoryPointsO);
+    System.out.println("Black (O) Stones Captured: " + stonesCapturedO);
+    System.out.println("Black (O) Score: " + scoreO);
+
+    if (scoreX > scoreO) {
+        System.out.println("White (X) wins!");
+    } else if (scoreX < scoreO) {
+        System.out.println("Black (O) wins!");
+    } else {
+        System.out.println("It's a tie!");
     }
 
-    private void updateScore() {
-        scoreX = 0;
-        scoreO = 0;
+    gameEnded = true;
+}
 
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
-                if (board[i][j] == 'X') {
-                    scoreX++;
-                } else if (board[i][j] == 'O') {
-                    scoreO++;
+
+
+
+
+private char[][] calculateTerritories() {
+    char[][] territories = new char[size][size];
+
+    // Initialize all territories as empty
+    for (int i = 0; i < size; i++) {
+        Arrays.fill(territories[i], '.');
+    }
+
+    // Iterate over each position on the board
+    for (int row = 0; row < size; row++) {
+        for (int col = 0; col < size; col++) {
+            if (board[row][col] == '.') {
+                // If the position is empty, check if it is surrounded by a single player
+                char player = getSurroundingPlayer(row, col);
+                if (player != '.') {
+                    territories[row][col] = player;
                 }
             }
         }
+    }
 
-        if (scoreX + komi > scoreO) {
-            scoreX += komi; // Add komi to white player's score
-        } else {
-            scoreO += komi; // Add komi to black player's score
+    return territories;
+}
+
+private char getSurroundingPlayer(int row, int col) {
+    char player = '.';
+    boolean hasMultiplePlayers = false;
+
+    // Check the neighboring positions
+    if (row > 0) {
+        if (player == '.') {
+            player = board[row - 1][col];
+        } else if (player != board[row - 1][col]) {
+            hasMultiplePlayers = true;
         }
     }
+    if (row < size - 1) {
+        if (player == '.') {
+            player = board[row + 1][col];
+        } else if (player != board[row + 1][col]) {
+            hasMultiplePlayers = true;
+        }
+    }
+    if (col > 0) {
+        if (player == '.') {
+            player = board[row][col - 1];
+        } else if (player != board[row][col - 1]) {
+            hasMultiplePlayers = true;
+        }
+    }
+    if (col < size - 1) {
+        if (player == '.') {
+            player = board[row][col + 1];
+        } else if (player != board[row][col + 1]) {
+            hasMultiplePlayers = true;
+        }
+    }
+
+    if (hasMultiplePlayers) {
+        return '.'; // Return '.' if there are multiple players surrounding the position
+    }
+
+    return player; // Return the single player if found
+}
+
+private double calculateScore(char player, char[][] territories) {
+    double score = 0;
+
+    for (int row = 0; row < size; row++) {
+        for (int col = 0; col < size; col++) {
+            if (territories[row][col] == player) {
+                score++;
+            }
+        }
+    }
+
+    return score;
+}
+
+
+ private int[] countTerritoryPoints(char[][] territories) {
+    int[] points = new int[2]; // Index 0 for player X, Index 1 for player O
+
+    for (int row = 0; row < size; row++) {
+        for (int col = 0; col < size; col++) {
+            if (territories[row][col] == 'X') {
+                points[0]++;
+            } else if (territories[row][col] == 'O') {
+                points[1]++;
+            }
+        }
+    }
+
+    return points;
+}
+
+ 
+
+ private void updateScore() {
+    char[][] territories = calculateTerritories(); // Calculate the territories
+    scoreX = calculateScore('X', territories); // Calculate the score for player X
+    scoreO = calculateScore('O', territories); // Calculate the score for player O
+
+    // Add komi to white player's score
+    scoreX += komi;
+}
+
+
 
     private void printBoard() {
         System.out.println("  0 1 2 3 4 5 6 7 8");
@@ -417,7 +530,7 @@ private int removeCapturedStonesHelper(int row, int col, char player, boolean[][
             }
             System.out.println();
         }
-        System.out.println("Now it's " + ((currentPlayer == 'X') ? "White" : "Black") + " stone's move.");
+       // System.out.println("Now it's " + ((currentPlayer == 'X') ? "White" : "Black") + " stone's move.");
         System.out.println("White (X) Stones Captured: " + stonesCapturedX);
         System.out.println("Black (O) Stones Captured: " + stonesCapturedO);
     }
