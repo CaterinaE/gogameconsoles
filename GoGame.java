@@ -5,7 +5,7 @@ public class GoGame {
     private int size;
     private char[][] board;
     private char currentPlayer;
-    private double scoreX, scoreO;
+    //private double scoreX, scoreO;
     private boolean gameEnded;
     private int consecutivePasses;
     private double komi;
@@ -59,7 +59,7 @@ public class GoGame {
             String input = scanner.next();
 
             if (input.equals("e")) {
-                declareWinner();
+              //  declareWinner();
                 break;
             }
 
@@ -86,7 +86,7 @@ public class GoGame {
                 consecutivePasses = 0;
 
                 if (isGameOver()) {
-                    declareWinner();
+                  //  declareWinner();
                     break;
                 }
 
@@ -95,7 +95,7 @@ public class GoGame {
                 consecutivePasses++;
                 currentPlayer = (currentPlayer == 'X') ? 'O' : 'X'; // Switch player
                 if (consecutivePasses >= 2) {
-                    declareWinner();
+                  //  declareWinner();
                     break;
                 }
             } else {
@@ -374,19 +374,37 @@ public class GoGame {
     }
 
    
-    private boolean isGameOver() {
-        return consecutivePasses >= 2;
+   // private boolean isGameOver() {
+      //  return consecutivePasses >= 2;
+   // }
+
+    private void printBoard() {
+        System.out.println("  0 1 2 3 4 5 6 7 8");
+        for (int i = 0; i < size; i++) {
+            System.out.print(i + " ");
+            for (int j = 0; j < size; j++) {
+                System.out.print(board[i][j] + " ");
+            }
+            System.out.println();
+        }
+       // System.out.println("Now it's " + ((currentPlayer == 'X') ? "White" : "Black") + " stone's move.");
+        System.out.println("White (X) Stones Captured: " + stonesCapturedX);
+        System.out.println("Black (O) Stones Captured: " + stonesCapturedO);
     }
 
-private void declareWinner() {
+    public static void main(String[] args) {
+        GoGame game = new GoGame(9, 6.5); // Start with a default board size of 9x9 and komi of 6.5
+        game.play();
+    }
+/*private void declareWinner() {
     char[][] territories = calculateTerritories(); // Calculate the territories
     int[] points = countTerritoryPoints(territories); // Count the territory points for each player
     int territoryPointsX = points[0];
     int territoryPointsO = points[1];
 
     // Calculate the final score based on territory and captured stones
-     scoreX = territoryPointsX+komi - stonesCapturedX;
-      scoreO = territoryPointsO - stonesCapturedO;
+    double scoreX = territoryPointsX+komi - stonesCapturedX;
+    double scoreO = territoryPointsO - stonesCapturedO;
 
     System.out.println("Game Over!");
     System.out.println("Final Score:");
@@ -407,7 +425,6 @@ private void declareWinner() {
 
     gameEnded = true;
 }
-
 
 
 
@@ -435,6 +452,7 @@ private char[][] calculateTerritories() {
 
     return territories;
 }
+
 
 private char getSurroundingPlayer(int row, int col) {
     char player = '.';
@@ -508,8 +526,6 @@ private double calculateScore(char player, char[][] territories) {
     return points;
 }
 
- 
-
  private void updateScore() {
     char[][] territories = calculateTerritories(); // Calculate the territories
     scoreX = calculateScore('X', territories); // Calculate the score for player X
@@ -517,26 +533,8 @@ private double calculateScore(char player, char[][] territories) {
 
     // Add komi to white player's score
     scoreX += komi;
-}
+} */
 
 
 
-    private void printBoard() {
-        System.out.println("  0 1 2 3 4 5 6 7 8");
-        for (int i = 0; i < size; i++) {
-            System.out.print(i + " ");
-            for (int j = 0; j < size; j++) {
-                System.out.print(board[i][j] + " ");
-            }
-            System.out.println();
-        }
-       // System.out.println("Now it's " + ((currentPlayer == 'X') ? "White" : "Black") + " stone's move.");
-        System.out.println("White (X) Stones Captured: " + stonesCapturedX);
-        System.out.println("Black (O) Stones Captured: " + stonesCapturedO);
-    }
-
-    public static void main(String[] args) {
-        GoGame game = new GoGame(9, 6.5); // Start with a default board size of 9x9 and komi of 6.5
-        game.play();
-    }
 }
