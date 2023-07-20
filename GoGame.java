@@ -2,19 +2,18 @@ import java.util.Arrays;
 import java.util.Scanner;
 
 public class GoGame {
-    private int size;
+    private int size, stonesCapturedX, stonesCapturedO;
     private char[][] board;
     private char currentPlayer;
-    //private double scoreX, scoreO;
+   private double scoreX, scoreO;
     private boolean gameEnded;
     private int consecutivePasses;
     private double komi;
-    private int stonesCapturedX, stonesCapturedO;
     private char[][] previousBoard; // keep track of previous board positions
 
     public GoGame(int size, double komi) {
         this.size = size;
-        this.komi = komi;
+       // this.komi = komi;
         board = new char[size][size];
         currentPlayer = 'O'; // Black goes first
         previousBoard = new char[size][size];
@@ -37,15 +36,15 @@ public class GoGame {
         } else {
             // Use predefined board
             board = new char[][]{
-                {'.', '.', '.', '.', '.', '.', 'O', '.', '.'},
-                {'.', '.', '.', '.', '.', '.', 'O', '.', '.'},
-                {'.', '.', '.', '.', '.', '.', 'O', '.', '.'},
-                {'.', '.', '.', '.', '.', '.', 'O', 'O', 'O'},
-                {'.', '.', '.', '.', 'O', '.', 'O', '.', '.'},
-                {'.', '.', '.', '.', '.', '.', 'O', 'O', 'O'},
                 {'.', '.', '.', '.', '.', '.', '.', '.', '.'},
-                {'.', '.', '.', '.', '.', '.', '.', 'O', 'X'},
-                {'.', '.', '.', '.', '.', '.', 'O', 'X', '.'}
+                {'.', '.', '.', '.', '.', '.', '.', '.', '.'},
+                {'.', '.', '.', '.', '.', '.', '.', '.', '.'},
+                {'.', '.', '.', '.', '.', '.', '.', '.', '.'},
+                {'.', '.', '.', '.', '.', '.', '.', '.', '.'},
+                {'.', '.', '.', '.', '.', '.', '.', '.', '.'},
+                {'.', '.', '.', '.', '.', '.', 'O', '.', '.'},
+                {'.', '.', '.', '.', '.', 'O', 'X', '.', '.'},
+                {'.', '.', '.', '.', '.', '.', '.', '.', '.'}
             };
         }
 
@@ -58,10 +57,11 @@ public class GoGame {
             System.out.print("Enter row (0-" + (size - 1) + ") or 'e' to end the game, or 'a' for AI help: ");
             String input = scanner.next();
 
-            if (input.equals("e")) {
-              //  declareWinner();
-                break;
-            }
+           
+           /*  if (input.equals("e")) {
+                declareWinner();
+               break;
+            }*/
 
             if (input.equals("a")) {
                 provideAIHelp();
@@ -85,20 +85,24 @@ public class GoGame {
                 printBoard();
                 consecutivePasses = 0;
 
-                if (isGameOver()) {
+              //  if (isGameOver()) {
                   //  declareWinner();
-                    break;
-                }
+                //    break;
+              //  }
 
                 currentPlayer = (currentPlayer == 'X') ? 'O' : 'X'; // Switch player
-            } else if (row == -1 && col == -1) {
+            } 
+            
+            else if (row == -1 && col == -1) {
                 consecutivePasses++;
                 currentPlayer = (currentPlayer == 'X') ? 'O' : 'X'; // Switch player
-                if (consecutivePasses >= 2) {
+               // if (consecutivePasses >= 2) {
                   //  declareWinner();
-                    break;
-                }
-            } else {
+                  //  break;
+               // }
+            } 
+            
+            else {
                 System.out.println("Invalid move. Try again.");
             }
         }
@@ -395,7 +399,12 @@ public class GoGame {
     public static void main(String[] args) {
         GoGame game = new GoGame(9, 6.5); // Start with a default board size of 9x9 and komi of 6.5
         game.play();
-    }
+    }}
+
+
+
+
+
 /*private void declareWinner() {
     char[][] territories = calculateTerritories(); // Calculate the territories
     int[] points = countTerritoryPoints(territories); // Count the territory points for each player
@@ -536,5 +545,3 @@ private double calculateScore(char player, char[][] territories) {
 } */
 
 
-
-}
