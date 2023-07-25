@@ -10,6 +10,8 @@ public class GoGame {
     private boolean gameEnded;
     private int consecutivePasses;
     private char[][] previousBoard; // keep track of previous board positions
+private String patternName;
+
 
     public GoGame(int size) {
         this.size = size;
@@ -23,6 +25,7 @@ public class GoGame {
 public void play() {
     Scanner scanner = new Scanner(System.in);
 
+ 
     System.out.println("How do you want to initialize the board?");
     System.out.println("1. Predefined board");
     System.out.println("2. Enter the initial board state manually");
@@ -30,7 +33,7 @@ public void play() {
     System.out.println("4. Quit");
 
     int choice = scanner.nextInt();
-
+ 
     switch (choice) {
         case 1:
             initializeWithPredefinedBoard();
@@ -50,6 +53,8 @@ public void play() {
             scanner.close();
             return;
     }
+ 
+
 
     consecutivePasses = 0;
     stonesCapturedX = 0;
@@ -62,13 +67,43 @@ public void play() {
         System.out.print("Enter row (0-" + (size - 1) + "), 'a' for AI help, or 'q' to quit: ");
         String input = scanner.next();
 
-        if (input.equals("a")) {
-            provideAIHelp();
-            continue;
-        } else if (input.equals("q")) {
+        
+       
+   if (input.equals("a")) {
+            while (true) {
+                System.out.println("Which type of AI help do you want?");
+                System.out.println("1. Move Suggestion");
+                System.out.println("2. Capture Help");
+                System.out.println("3. Quit AI Help");
+                int aiHelpChoice = scanner.nextInt();
+
+                switch (aiHelpChoice) {
+                    case 1:
+                        provideAIHelp();
+                        break;
+                    case 2:
+                        provideCaptureHelpAI(scanner);
+ // Pass the scanner as an argument
+                        break;
+                    case 3:
+                        System.out.println("Exiting AI Help.");
+                        break;
+                    default:
+                        System.out.println("Invalid choice.");
+                        break;
+                }
+
+                if (aiHelpChoice == 3) {
+                    break;
+                }
+            }
+        }
+
+        else if (input.equals("q")) {
             break;
         }
 
+ 
         int row;
         try {
             row = Integer.parseInt(input);
@@ -93,13 +128,20 @@ public void play() {
             if (consecutivePasses >= 2) {
                 break;
             }
-        } else {
+        }
+        
+        else {
+            
             System.out.println("Invalid move. Try again.");
         }
     }
 
     scanner.close();
 }
+
+   
+
+
 
   private void initializeWithPredefinedBoard() {
         size = 9;
@@ -111,7 +153,7 @@ public void play() {
             {'.', '.', '.', '.', 'O', '.', 'O', '.', '.'},
             {'.', '.', '.', '.', '.', '.', 'O', 'O', 'O'},
             {'.', '.', '.', '.', '.', '.', '.', '.', '.'},
-            {'.', '.', '.', '.', '.', '.', '.', 'O', 'X'},
+            {'.', '.', '.', '.', '.', '.', '.', 'O', '.'},
             {'.', '.', '.', '.', '.', '.', 'O', 'X', '.'}
         };
         currentPlayer = 'O';
@@ -132,24 +174,33 @@ public void play() {
         }
     }
 
-  private void initializeFromFile() {
+   private void initializeFromFile() {
     try {
         File file = new File("gopatterns.txt");
         Scanner scanner = new Scanner(file);
 
-        // Skip the pattern labels
+        boolean patternNameFound = false;
+
+        // Read the file line by line
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine();
-            if (line.isEmpty()) {
-                break;  // Reached the end of pattern labels
-            }
-        }
 
-        // Read the board state from the text file
-        for (int i = 0; i < size; i++) {
-            String rowInput = scanner.nextLine();
-            for (int j = 0; j < size; j++) {
-                board[i][j] = rowInput.charAt(j);
+            // Check if the line contains a pattern name (starting with 'P')
+            if (line.length() > 0 && line.charAt(0) == 'P' && !patternNameFound) {
+                System.out.println(line); // Print the pattern name
+                patternNameFound = true;
+            } else if (!line.isEmpty()) {
+                // Reached the board state, read the board from the text file
+                for (int i = 0; i < size; i++) {
+                    String rowInput = line;
+                    for (int j = 0; j < size; j++) {
+                        board[i][j] = rowInput.charAt(j);
+                    }
+                    if (i < size - 1 && scanner.hasNextLine()) {
+                        line = scanner.nextLine();
+                    }
+                }
+                break; // Board reading complete
             }
         }
 
@@ -160,6 +211,8 @@ public void play() {
     }
 }
  
+
+//--------------------ai helper--------------------
     // New method: provideAIHelp
     private void provideAIHelp() {
         System.out.println("AI is analyzing the board...");
@@ -202,42 +255,51 @@ public void play() {
             System.out.println("AI suggests passing the turn.");
         }
     }
+ // ----------end of ai helper-------------
 
-    // New method: simulateCaptureStones
+    // New method: simulateCaptureStones ai helper
     private int simulateCaptureStones(int row, int col, char[][] tempBoard) {
         char opponentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
 
         int capturedStones = 0;
 
         if (row > 0 && tempBoard[row - 1][col] == opponentPlayer) {
-            if (isCaptured(row - 1, col, tempBoard)) {
-                capturedStones += removeCapturedStones(row - 1, col, tempBoard);
+            if (isGroupCaptured(row - 1, col, tempBoard)) {
+                capturedStones += simulateRemoveCapturedStones(row - 1, col, tempBoard);
             }
         }
         if (row < size - 1 && tempBoard[row + 1][col] == opponentPlayer) {
-            if (isCaptured(row + 1, col, tempBoard)) {
-                capturedStones += removeCapturedStones(row + 1, col, tempBoard);
+            if (isGroupCaptured(row + 1, col, tempBoard)) {
+                capturedStones += simulateRemoveCapturedStones(row + 1, col, tempBoard);
             }
         }
         if (col > 0 && tempBoard[row][col - 1] == opponentPlayer) {
-            if (isCaptured(row, col - 1, tempBoard)) {
-                capturedStones += removeCapturedStones(row, col - 1, tempBoard);
+            if (isGroupCaptured(row, col - 1, tempBoard)) {
+                capturedStones += simulateRemoveCapturedStones(row, col - 1, tempBoard);
             }
         }
         if (col < size - 1 && tempBoard[row][col + 1] == opponentPlayer) {
-            if (isCaptured(row, col + 1, tempBoard)) {
-                capturedStones += removeCapturedStones(row, col + 1, tempBoard);
+            if (isGroupCaptured(row, col + 1, tempBoard)) {
+                capturedStones += simulateRemoveCapturedStones(row, col + 1, tempBoard);
             }
         }
 
         return capturedStones;
     }
-    // New method: isCaptured
-    private boolean isCaptured(int row, int col, char[][] tempBoard) {
+// New method: is used for the ai helper 
+    private boolean isGroupCaptured(int row, int col, char[][] tempBoard) {
         char player = tempBoard[row][col];
         boolean[][] visited = new boolean[size][size];
-        return !hasLiberty(row, col, player, visited, tempBoard) && !isKoRuleViolation(row, col, tempBoard);
+        return !hasLibertyAIHelper(row, col, player, visited, tempBoard) && !isKoRuleViolation(row, col, tempBoard);
     }
+ // used for the ai helper
+    private int simulateRemoveCapturedStones(int row, int col, char[][] tempBoard) {
+        char player = tempBoard[row][col];
+        boolean[][] visited = new boolean[size][size];
+        return removeCapturedStonesHelper(row, col, player, visited, tempBoard);
+    }
+
+
 
     // New method: isKoRuleViolation
     private boolean isKoRuleViolation(int row, int col, char[][] tempBoard) {
@@ -259,6 +321,7 @@ public void play() {
         return false;
     }
  
+
  // New method: countEyes
     private int countEyes(char[][] tempBoard) {
         int eyeCount = 0;
@@ -315,16 +378,29 @@ private boolean isEye(int row, int col, char player, char[][] tempBoard) {
             (row < size - 1 && tempBoard[row + 1][col] == player) &&
             (col > 0 && tempBoard[row][col - 1] == player) &&
             (col < size - 1 && tempBoard[row][col + 1] == player);
-}
-    
+}  
+   
+  
+ //This method is used by the AI helper
+    private boolean hasLibertyAIHelper(int row, int col, char player, boolean[][] visited, char[][] tempBoard) {
+        if (row < 0 || row >= size || col < 0 || col >= size || visited[row][col]) {
+            return false;
+        }
+        if (tempBoard[row][col] == '.') {
+            return true;
+        }
+        if (tempBoard[row][col] != player) {
+            return false;
+        }
 
-private int removeCapturedStones(int row, int col, char[][] tempBoard) {
-        char player = tempBoard[row][col];
-        boolean[][] visited = new boolean[size][size];
-        return removeCapturedStonesHelper(row, col, player, visited, tempBoard);
+        visited[row][col] = true;
+
+        return hasLibertyAIHelper(row - 1, col, player, visited, tempBoard)
+                || hasLibertyAIHelper(row + 1, col, player, visited, tempBoard)
+                ||hasLibertyAIHelper(row, col - 1, player, visited, tempBoard)
+                ||hasLibertyAIHelper(row, col + 1, player, visited, tempBoard);
     }
-
-    private int removeCapturedStonesHelper(int row, int col, char player, boolean[][] visited, char[][] tempBoard) {
+private int removeCapturedStonesHelper(int row, int col, char player, boolean[][] visited, char[][] tempBoard) {
         if (row < 0 || row >= size || col < 0 || col >= size || visited[row][col]) {
             return 0;
         }
@@ -338,8 +414,72 @@ private int removeCapturedStones(int row, int col, char[][] tempBoard) {
         }
         return 0;
     }
+//-----end of ai methond section---------
 
-   private boolean isValidMove(int row, int col) {
+
+
+//-------------------------------------------------capture stone ai helper ---------------------
+ 
+
+// New method: provideCaptureHelpAI for AI help in capturing stones
+private void provideCaptureHelpAI(Scanner scanner) {
+    System.out.print("Enter row of the stone to capture: ");
+    int row = scanner.nextInt();
+    System.out.print("Enter col of the stone to capture: ");
+    int col = scanner.nextInt();
+
+    if (row < 0 || row >= size || col < 0 || col >= size) {
+        System.out.println("Invalid coordinates. Please try again.");
+        return;
+    }
+
+    if (board[row][col] == '.') {
+        System.out.println("There is no stone at the specified coordinates. Please try again.");
+        return;
+    }
+
+    char opponentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
+    if (board[row][col] != opponentPlayer) {
+        System.out.println("The specified stone does not belong to the opponent. Please try again.");
+        return;
+    }
+
+    boolean[][] visited = new boolean[size][size];
+
+    // Check if the specified stone has liberties and can be captured
+    if (hasLiberty(row, col, opponentPlayer, visited)) {
+        System.out.println("The specified stone is the opponent, it has opponentPlayer liberties and can be captured.");
+
+        // Check if the move captures at least one opponent stone
+        char[][] tempBoard = new char[size][size];
+        for (int i = 0; i < size; i++) {
+            tempBoard[i] = Arrays.copyOf(board[i], size);
+        }
+        tempBoard[row][col] = currentPlayer;
+ 
+     
+            System.out.println("AI suggests placing a stone next to the specified stone to capture it.");
+            // AI can suggest any empty position next to the specified stone after capturing it
+            for (int r = row - 1; r <= row + 1; r++) {
+                for (int c = col - 1; c <= col + 1; c++) {
+                    if (r >= 0 && r < size && c >= 0 && c < size && tempBoard[r][c] == '.') {
+                        System.out.println("AI suggests placing a stone at row " + r + ", col " + c);
+                        return;
+                    }
+                }
+            }
+    } 
+    
+    else {
+        System.out.println("The specified stone has liberties and cannot be captured.");
+    }
+}
+
+
+
+
+
+private boolean isValidMove(int row, int col) {
     if (row < 0 || row >= size || col < 0 || col >= size) {
         return false;
     }
@@ -357,46 +497,50 @@ private int removeCapturedStones(int row, int col, char[][] tempBoard) {
     tempBoard[row][col] = currentPlayer;
 
     // Check if the temporary board matches the previous board and if it results in self-capture or violates the ko rule
-    return !Arrays.deepEquals(tempBoard, previousBoard) && (capturesOpponentStones(row, col, tempBoard) || !isSelfCapture(row, col, tempBoard)) && !isKoRuleViolation(row, col, tempBoard);
+    return !Arrays.deepEquals(tempBoard, previousBoard) && (capturesOpponentStones(row, col, tempBoard) || !isGroupCaptured(row, col, tempBoard)) && !isKoRuleViolation(row, col, tempBoard);
 }
 
-    private boolean capturesOpponentStones(int row, int col, char[][] tempBoard) {
-        // Check if the move captures at least one opponent stone
-        char opponentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
 
-        if (row > 0 && tempBoard[row - 1][col] == opponentPlayer && isCaptured(row - 1, col, tempBoard)) {
-            return true;
-        }
-        if (row < size - 1 && tempBoard[row + 1][col] == opponentPlayer && isCaptured(row + 1, col, tempBoard)) {
-            return true;
-        }
-        if (col > 0 && tempBoard[row][col - 1] == opponentPlayer && isCaptured(row, col - 1, tempBoard)) {
-            return true;
-        }
-        if (col < size - 1 && tempBoard[row][col + 1] == opponentPlayer && isCaptured(row, col + 1, tempBoard)) {
-            return true;
-        }
+private boolean capturesOpponentStones(int row, int col, char[][] tempBoard) {
+    // Check if the move captures at least one opponent stone
+    char opponentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
+    int capturedStones = 0;
 
-        return false;
+    if (row > 0 && tempBoard[row - 1][col] == opponentPlayer && isGroupCaptured(row - 1, col, tempBoard)) {
+        capturedStones += simulateRemoveCapturedStones(row - 1, col, tempBoard);
+    }
+    if (row < size - 1 && tempBoard[row + 1][col] == opponentPlayer && isGroupCaptured(row + 1, col, tempBoard)) {
+        capturedStones += simulateRemoveCapturedStones(row + 1, col, tempBoard);
+    }
+    if (col > 0 && tempBoard[row][col - 1] == opponentPlayer && isGroupCaptured(row, col - 1, tempBoard)) {
+        capturedStones += simulateRemoveCapturedStones(row, col - 1, tempBoard);
+    }
+    if (col < size - 1 && tempBoard[row][col + 1] == opponentPlayer && isGroupCaptured(row, col + 1, tempBoard)) {
+        capturedStones += simulateRemoveCapturedStones(row, col + 1, tempBoard);
     }
 
-    private boolean isSelfCapture(int row, int col, char[][] tempBoard) {
-        // Check if the move results in self-capture
-        char opponentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
+    return capturedStones > 0;
+}
 
-        // Check if there is at least one neighboring opponent stone
-        boolean hasOpponentNeighbor =
-                (row > 0 && tempBoard[row - 1][col] == opponentPlayer) ||
-                (row < size - 1 && tempBoard[row + 1][col] == opponentPlayer) ||
-                (col > 0 && tempBoard[row][col - 1] == opponentPlayer) ||
-                (col < size - 1 && tempBoard[row][col + 1] == opponentPlayer);
 
-        // Check if self-capture occurs only when there is at least one neighboring opponent stone
-        return hasOpponentNeighbor && isCaptured(row, col, tempBoard);
+ 
+ // ----- enf of capture heler ai section-----------
+
+  
+ 
+  
+ 
+ 
+ 
+ private void makeMove(int row, int col) {
+        board[row][col] = currentPlayer;
+      
+        // Update previous board
+        for (int i = 0; i < size; i++) {
+           
+            previousBoard[i] = Arrays.copyOf(board[i], size);
+        }
     }
-
-    
-
 
 
     private void captureStones(int row, int col) {
@@ -405,22 +549,22 @@ private int removeCapturedStones(int row, int col, char[][] tempBoard) {
         int stonesCaptured = 0; // Variable to keep track of the captured stones
 
         if (row > 0 && board[row - 1][col] == opponentPlayer) {
-            if (isCaptured(row - 1, col)) {
+            if (isStoneCaptured(row - 1, col)) {
                 stonesCaptured += removeCapturedStones(row - 1, col);
             }
         }
         if (row < size - 1 && board[row + 1][col] == opponentPlayer) {
-            if (isCaptured(row + 1, col)) {
+            if (isStoneCaptured(row + 1, col)) {
                 stonesCaptured += removeCapturedStones(row + 1, col);
             }
         }
         if (col > 0 && board[row][col - 1] == opponentPlayer) {
-            if (isCaptured(row, col - 1)) {
+            if (isStoneCaptured(row, col - 1)) {
                 stonesCaptured += removeCapturedStones(row, col - 1);
             }
         }
         if (col < size - 1 && board[row][col + 1] == opponentPlayer) {
-            if (isCaptured(row, col + 1)) {
+            if (isStoneCaptured(row, col + 1)) {
                 stonesCaptured += removeCapturedStones(row, col + 1);
             }
         }
@@ -453,50 +597,68 @@ private int removeCapturedStones(int row, int col, char[][] tempBoard) {
         }
         return 0;
     }
- 
 
-      private boolean hasLiberty(int row, int col, char player, boolean[][] visited, char[][] tempBoard) {
+
+
+
+    // these arent used for the ai these show the update of capture stones-----------------
+    private boolean isStoneCaptured(int row, int col) {
+        char player = board[row][col];
+        boolean[][] visited = new boolean[size][size];
+        return !hasLiberty(row, col, player, visited);
+    }
+
+ private boolean hasLiberty(int row, int col, char player, boolean[][] visited) {
     if (row < 0 || row >= size || col < 0 || col >= size || visited[row][col]) {
         return false;
     }
-    if (tempBoard[row][col] == '.') {
+    if (board[row][col] == '.') {
         return true;
     }
-    if (tempBoard[row][col] != player) {
+    if (board[row][col] != player) {
         return false;
     }
 
     visited[row][col] = true;
 
-    return hasLiberty(row - 1, col, player, visited, tempBoard)
-            || hasLiberty(row + 1, col, player, visited, tempBoard)
-            || hasLiberty(row, col - 1, player, visited, tempBoard)
-            || hasLiberty(row, col + 1, player, visited, tempBoard);
+    return hasLiberty(row - 1, col, player, visited)
+            || hasLiberty(row + 1, col, player, visited)
+            || hasLiberty(row, col - 1, player, visited)
+            || hasLiberty(row, col + 1, player, visited);
 }
+//-------------------  these arent used for the ai these show the update of capture stones-----------------
 
 
-    private void makeMove(int row, int col) {
-        board[row][col] = currentPlayer;
-        // Update previous board
-        for (int i = 0; i < size; i++) {
-            previousBoard[i] = Arrays.copyOf(board[i], size);
-        }
-    }
     private void printBoard() {
+
+
+    // Print the pattern name if available
+    if (patternName != null) {
+        System.out.println(patternName);
+    }
+       
         System.out.println("  0 1 2 3 4 5 6 7 8");
+       
         for (int i = 0; i < size; i++) {
+           
             System.out.print(i + " ");
+           
             for (int j = 0; j < size; j++) {
+              
                 System.out.print(board[i][j] + " ");
             }
+            
             System.out.println();
         }
+       
         System.out.println("White (X) Stones Captured: " + stonesCapturedX);
         System.out.println("Black (O) Stones Captured: " + stonesCapturedO);
     }
 
     public static void main(String[] args) {
+       
         GoGame game = new GoGame(9); // Start with a default board size of 9x9 and komi of 6.5
         game.play();
+
     }
 }
