@@ -156,8 +156,8 @@ public void play() {
             {'.', '.', '.', 'O', 'X', 'O', 'O', 'O', 'O'},
             {'.', '.', '.', '.', 'O', '.', 'O', '.', '.'},
             {'.', '.', '.', '.', '.', '.', 'O', 'O', 'O'},
-            {'.', '.', '.', '.', '.', '.', '.', '.', '.'},
-            {'.', '.', '.', '.', '.', '.', '.', 'O', '.'},
+            {'.', '.', '.', '.', '.', '.', '.', 'X', '.'},
+            {'.', '.', '.', '.', '.', '.', 'X', 'O', 'X'},
             {'.', '.', '.', '.', '.', '.', 'O', 'X', '.'}
         };
         currentPlayer = 'O';
@@ -544,10 +544,7 @@ private int evaluateBoard(char[][] board, char player) {
     return opponentStones;
 }
 
- 
-
- 
- 
+  
  // ----- end of capture heler ai section-----------
 
   // New method: simulateCaptureStones ai helper
