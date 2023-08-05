@@ -1,12 +1,14 @@
-
-
+ 
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Set;
+import java.util.Stack;
 
 public class GoGame {
     private int size, stonesCapturedX, stonesCapturedO;
@@ -153,13 +155,13 @@ public void play() {
         board = new char[][]{
             {'.', '.', '.', '.', '.', '.', 'O', '.', '.'},
             {'.', '.', '.', '.', 'O', '.', 'O', '.', '.'},
-            {'.', 'O', '.', '.', 'X', 'O', 'O', '.', '.'},
+            {'.', 'O', '.', '.', 'X', '.', 'O', '.', '.'},
             {'.', 'X', 'O', 'O', 'X', 'O', 'O', 'O', 'O'},
             {'.', '.', '.', '.', 'O', '.', 'O', '.', '.'},
-            {'.', '.', '.', '.', '.', '.', 'O', 'O', 'O'},
-            {'.', '.', '.', '.', '.', '.', '.', 'X', '.'},
-            {'.', '.', '.', '.', '.', '.', 'X', 'O', 'X'},
-            {'.', '.', '.', '.', '.', '.', 'O', 'X', '.'}
+            {'.', '.', '.', '.', '.', '.', '.', '.', '.'},
+            {'.', '.', '.', '.', 'X', 'X', 'X', 'X', 'X'},
+            {'.', '.', '.', '.', 'X', 'O', 'O', 'O', 'O'},
+            {'.', '.', '.', '.', 'X', 'O', '.', '.', '.'}
         };
         currentPlayer = 'O';
         gameEnded = false;
@@ -361,14 +363,18 @@ private boolean isKoRuleViolation(int row, int col, char[][] tempBoard) {
     tempBoard[row][col] = '.';
 
     return false;
-}
-
+} 
 //-------------------------------------------------capture stone ai helper ---------------------
   
-// New method: provideCaptureHelpAI for AI help in capturing stones
-// New method: provideCaptureHelpAI for AI help in capturing stones
 private void provideCaptureHelpAI(Scanner scanner, char currentPlayer) {
-    System.out.print("Enter row of the opponent's stone to capture: ");
+      int bestRow = -1;
+    int bestCol = -1;
+    int maxCapturedStones = 0;
+    int maxLiberties = Integer.MAX_VALUE; // Initialize maxLiberties to a high value
+// Depth level to think two moves ahead
+  int depth = 3;
+    
+ System.out.print("Enter row of the opponent's stone to capture: ");
     int row = scanner.nextInt();
     System.out.print("Enter col of the opponent's stone to capture: ");
     int col = scanner.nextInt();
@@ -389,18 +395,17 @@ private void provideCaptureHelpAI(Scanner scanner, char currentPlayer) {
         return;
     }
 
-    int bestRow = -1;
-    int bestCol = -1;
-    int maxCapturedStones = 0;
-    int maxLiberties = Integer.MAX_VALUE; // Initialize maxLiberties to a high value
-
+ 
     // Create a temporary board to simulate capturing
-    char[][] tempBoard = new char[size][size];
-    for (int i = 0; i < size; i++) {
+    // Simulate the best move to capture the opponent's stone
+char[][] tempBoard = new char[size][size];
+   for (int i = 0; i < size; i++) {
         tempBoard[i] = Arrays.copyOf(board[i], size);
     }
 
-    // Generate all possible moves (empty points on the board)
+  
+
+    // Generate all possible moves (empty points on the board) for the old approach
     List<int[]> possibleMoves = new ArrayList<>();
     int[][] surroundingPositions = {{row - 1, col}, {row + 1, col}, {row, col - 1}, {row, col + 1}};
     for (int[] position : surroundingPositions) {
@@ -411,7 +416,7 @@ private void provideCaptureHelpAI(Scanner scanner, char currentPlayer) {
         }
     }
 
-    // Simulate and evaluate each move using minimax algorithm
+    // Simulate and evaluate each move using minimax algorithm for the old approach
     for (int[] move : possibleMoves) {
         int r = move[0];
         int c = move[1];
@@ -428,12 +433,9 @@ private void provideCaptureHelpAI(Scanner scanner, char currentPlayer) {
             // Count liberties for the opponent after making the move
             int opponentLiberties = countLiberties(opponentPlayer, newTempBoard);
 
-            // Use minimax algorithm to evaluate the board state after the opponent's response
-            int score = minimax(newTempBoard, opponentPlayer, 2, false);
-
             // Update the best move based on the maximized captured stones and minimized liberties
             if (newCapturedStones > maxCapturedStones ||
-                (newCapturedStones == maxCapturedStones && opponentLiberties < maxLiberties)) {
+                    (newCapturedStones == maxCapturedStones && opponentLiberties < maxLiberties)) {
                 bestRow = r;
                 bestCol = c;
                 maxCapturedStones = newCapturedStones;
@@ -441,11 +443,86 @@ private void provideCaptureHelpAI(Scanner scanner, char currentPlayer) {
             }
         }
     }
+ // Find group liberties using the new approach
+Set<String> groupLiberties = findGroupLiberties(row, col, opponentPlayer);
+
+// Simulate capturing the group and count the number of stones captured
+int capturedStonesInGroup = 0;
+char[][] tempBoardCaptureGroup = new char[size][size];
+for (int i = 0; i < size; i++) {
+    tempBoardCaptureGroup[i] = Arrays.copyOf(tempBoard[i], size);
+}
+
+for (String liberty : groupLiberties) {
+    String[] libertyCoordinates = liberty.split(",");
+    int libertyRow = Integer.parseInt(libertyCoordinates[0]);
+    int libertyCol = Integer.parseInt(libertyCoordinates[1]);
+
+    if (tempBoardCaptureGroup[libertyRow][libertyCol] != '.') {
+        // Mark the stone as captured and remove it from the board
+        tempBoardCaptureGroup[libertyRow][libertyCol] = '.';
+        capturedStonesInGroup++;
+    }
+}
+
+if (capturedStonesInGroup > 0) {
+    String[] libertyCoordinates = groupLiberties.iterator().next().split(",");
+    int libertyRow = Integer.parseInt(libertyCoordinates[0]);
+    int libertyCol = Integer.parseInt(libertyCoordinates[1]);
+
+    System.out.println("AI suggests placing a stone at row " + libertyRow + ", col " + libertyCol +
+            " to capture " + capturedStonesInGroup + " stone(s) in a group and limit opponent's liberties.");
+    return;
+}
+
+     // Use the minimax method to get the best score and set the flag to true before calling it
+    int bestScore = minimax(tempBoard, currentPlayer, depth, true);
 
     if (bestRow != -1 && bestCol != -1) {
         System.out.println("AI suggests placing a stone at row " + bestRow + ", col " + bestCol +
-                " to capture " + maxCapturedStones + " stone(s) and limit opponent's liberties.");
-    } else {
+                " to capture " + maxCapturedStones + " stone(s) and limit opponent's liberties.\n");
+    }
+
+       // Simulate the best move to capture the opponent's stone
+    char[][] newBoardAfterCapture = simulateMove(board, bestRow, bestCol, currentPlayer);
+
+    int bestResponseRow = -1;
+    int bestResponseCol = -1;
+    int bestResponseScore = Integer.MIN_VALUE;
+
+    for (int r = 0; r < size; r++) {
+        for (int c = 0; c < size; c++) {
+            if (newBoardAfterCapture[r][c] == '.') {
+                char[][] newTempBoard = simulateMove(newBoardAfterCapture, r, c, opponentPlayer);
+                int score = minimax(newTempBoard, currentPlayer, depth - 1, false);
+                if (score > bestResponseScore) {
+                    bestResponseScore = score;
+                    bestResponseRow = r;
+                    bestResponseCol = c;
+                }
+            }
+        }
+    }
+   
+             // the second move for the minimax without taking into acount what the player selected player
+       
+        // the second move for the player
+        char[][] tempBoardPlayerMove = simulateMove(newBoardAfterCapture, bestResponseRow, bestResponseCol, currentPlayer);
+        int[] playerMove = findBestCaptureMove(tempBoardPlayerMove, maxCapturedStones, currentPlayer);
+        int playerMoveRow = playerMove[0];
+        int playerMoveCol = playerMove[1];
+        System.out.println("\nPlayer should place a stone at row " + playerMoveRow + ", col " + playerMoveCol +
+                " to capture " + playerMove[2] + " stone(s) and limit opponent's liberties.\n");
+ 
+ 
+                // the second move for the player
+    if (bestResponseRow != -1 && bestResponseCol != -1) {
+        System.out.println("The minimax's  best move  capturing the opponent's stone, your best next move is at row "
+                + bestResponseRow + ", col " + bestResponseCol + ". " +maxCapturedStones);
+
+
+
+    }  else {
         boolean koRuleViolation = false;
         for (int[] move : possibleMoves) {
             int r = move[0];
@@ -457,19 +534,95 @@ private void provideCaptureHelpAI(Scanner scanner, char currentPlayer) {
         }
 
         if (koRuleViolation) {
-            System.out.println("Stone can't be placed because of the Ko rule.");
+            System.out.println("Stone can't be placed because of the Ko rule.\n");
         } else {
-            System.out.println("AI couldn't find a capture move for the specified stone.");
+            System.out.println("AI couldn't find a capture move for the specified stone.\n");
         }
+
+        
     }
 }
 
 
-// Minimax algorithm implementation
 
- private int minimax(char[][] board, char player, int depth, boolean isMaximizingPlayer) {
+
+private int[] findBestCaptureMove(char[][] board, int opponentCapturedStones, char currentPlayer) {
+    int[] bestMove = new int[]{-1, -1, 0}; // {row, col, capturedStones}
+    for (int row = 0; row < size; row++) {
+        for (int col = 0; col < size; col++) {
+            if (board[row][col] == '.') {
+                char[][] tempBoard = simulateMove(board, row, col, currentPlayer);
+                int capturedStones = simulateCaptureStones(row, col, tempBoard);
+
+                if (capturedStones > bestMove[2] && capturedStones > opponentCapturedStones) {
+                    bestMove[0] = row;
+                    bestMove[1] = col;
+                    bestMove[2] = capturedStones;
+                }
+            }
+        }
+    }
+    return bestMove;
+}
+
+
+private Set<String> findGroupLiberties(int row, int col, char player) {
+    Set<String> groupLiberties = new HashSet<>();
+    boolean[][] visited = new boolean[size][size];
+    Stack<int[]> stack = new Stack<>();
+    stack.push(new int[]{row, col});
+    while (!stack.isEmpty()) {
+        int[] current = stack.pop();
+        int r = current[0];
+        int c = current[1];
+        if (r < 0 || r >= size || c < 0 || c >= size || visited[r][c] || board[r][c] != player) continue;
+        visited[r][c] = true;
+        
+        int[][] surroundingPositions = {{r - 1, c}, {r + 1, c}, {r, c - 1}, {r, c + 1}};
+        boolean isEye = true; // Assume it's an eye until proven otherwise
+        for (int[] position : surroundingPositions) {
+            int nr = position[0];
+            int nc = position[1];
+            if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
+                if (board[nr][nc] == '.') {
+                    groupLiberties.add(nr + "," + nc);
+                } else if (board[nr][nc] != player) {
+                    isEye = false; // Not an eye if the surrounding point isn't the player's stone
+                }
+            } else {
+                isEye = false; // Not an eye if the point is on the edge of the board
+            }
+        }
+        
+        // If it's an eye, remove it from liberties
+        if (isEye) {
+            groupLiberties.remove(r + "," + c);
+        }
+        
+        // Continue the search with neighboring stones of the same player
+        for (int[] position : surroundingPositions) {
+            int nr = position[0];
+            int nc = position[1];
+            if (nr >= 0 && nr < size && nc >= 0 && nc < size && board[nr][nc] == player) {
+                stack.push(new int[]{nr, nc});
+            }
+        }
+    }
+    return groupLiberties;
+}
+public void printBoard(char[][] board) {
+    for (int row = 0; row < board.length; row++) {
+        for (int col = 0; col < board[0].length; col++) {
+            System.out.print(board[row][col] + " ");
+        }
+        System.out.println();
+    }
+}
+boolean printFlag = true; // Add this flag before the loop
+
+private int minimax(char[][] board, char player, int depth, boolean isMaximizingPlayer) {
     if (depth == 0) {
-        // If the depth is reached or the game has ended, evaluate the board state
+        // If the depth is reached, evaluate the board state
         return evaluateBoard(board, player);
     }
 
@@ -485,16 +638,28 @@ private void provideCaptureHelpAI(Scanner scanner, char currentPlayer) {
                     char[][] tempBoard = simulateMove(board, row, col, player);
                     int capturedStones = simulateCaptureStones(row, col, tempBoard);
 
-                    // Count liberties for the opponent after making the move
-                    int opponentLiberties = countLiberties(opponentPlayer, tempBoard);
-
-                    // Recursively call minimax for the next depth with the opponent as the maximizing player
+                    // Recursively call minimax for the next depth with the opponent as the minimizing player
                     int score = minimax(tempBoard, opponentPlayer, depth - 1, false);
 
                     // Adjust the score by the difference in liberties
-                    score += capturedStones - opponentLiberties;
+                    score += capturedStones;
 
                     bestScore = Math.max(bestScore, score);
+
+                if (capturedStones > 0 && score == bestScore && printFlag) {
+    System.out.println("\n(......Move you didnt select for capture which is the best move, MIN_VALUE Depth: " + depth + ", Row: " + row + ", Col: " + col + ", capturedStones: " + capturedStones +"......)\n");
+   // printBoard(tempBoard);
+    printFlag = false; // Set the flag to false after printing once
+
+}
+   //   if (capturedStones > 0 && score == bestScore && (row== 4 && col==1)  ) {
+   // System.out.println("\n(......Move you didnt select for capture which is the best move, MIN_VALUE Depth: " + depth + ", Row: " + row + ", Col: " + col + ", capturedStones: " + capturedStones +".....score"+ bestScore+"......)\n");
+    // printBoard(tempBoard);}
+
+   
+   // printFlag = false; // Set the flag to false after printing once
+      //}
+            
                 }
             }
         }
@@ -507,23 +672,31 @@ private void provideCaptureHelpAI(Scanner scanner, char currentPlayer) {
                     char[][] tempBoard = simulateMove(board, row, col, player);
                     int capturedStones = simulateCaptureStones(row, col, tempBoard);
 
-                    // Count liberties for the opponent after making the move
-                    int opponentLiberties = countLiberties(opponentPlayer, tempBoard);
-
-                    // Recursively call minimax for the next depth with the opponent as the minimizing player
+                    // Recursively call minimax for the next depth with the opponent as the maximizing player
                     int score = minimax(tempBoard, opponentPlayer, depth - 1, true);
 
                     // Adjust the score by the difference in liberties
-                    score -= capturedStones + opponentLiberties;
+                    score -= capturedStones;
 
                     bestScore = Math.min(bestScore, score);
+ // if (capturedStones > 0 && score == bestScore && (row== 3 && col==0)  ) {
+  //  System.out.println("\n(......Move you didnt select for capture which is the best move, MIN_VALUE Depth: " + depth + ", Row: " + row + ", Col: " + col + ", capturedStones: " + capturedStones +".....score"+ bestScore+"......)\n");
+   //  printBoard(tempBoard);}
                 }
             }
         }
     }
 
     return bestScore;
+
 }
+
+ 
+
+
+
+
+
 
 // New method: countLiberties
 private int countLiberties(char player, char[][] board) {
@@ -584,16 +757,26 @@ private int removeCapturedStonesHelperTempBoard(int row, int col, char player, b
         }
         return 0;
     }
- 
-
-private char[][] simulateMove(char[][] board, int row, int col, char player) {
-    char[][] newBoard = new char[size][size];
-    for (int i = 0; i < size; i++) {
-        newBoard[i] = Arrays.copyOf(board[i], size);
+ private char[][] simulateMove(char[][] board, int row, int col, char player) {
+    if (row < 0 || row >= board.length || col < 0 || col >= board[0].length) {
+        // Invalid move, return the original board
+        return board;
     }
+
+    char[][] newBoard = new char[board.length][board[0].length];
+    for (int i = 0; i < board.length; i++) {
+        newBoard[i] = Arrays.copyOf(board[i], board[i].length);
+    }
+
+    if (newBoard[row][col] != '.') {
+        // Invalid move, return the original board
+        return board;
+    }
+
     newBoard[row][col] = player;
     return newBoard;
 }
+
 
 // Evaluate the board state based on the number of opponent's stones
 private int evaluateBoard(char[][] board, char player) {
@@ -802,3 +985,4 @@ private void makeMove(int row, int col) {
 
     }
 }
+
