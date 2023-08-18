@@ -4,7 +4,20 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-    
+        {
+            "type": "java",
+            "name": "CaptureHelper",
+            "request": "launch",
+            "mainClass": "CaptureHelper",
+            "projectName": "gogameconsoles_de6fbb36"
+        },
+        {
+            "type": "java",
+            "name": "Main",
+            "request": "launch",
+            "mainClass": "Main",
+            "projectName": "gogameconsoles_de6fbb36"
+        },
         {
             "type": "java",
             "name": "Current File",

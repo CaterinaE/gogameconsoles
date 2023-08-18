@@ -1,0 +1,86 @@
+
+How to Play Go: A Basic Guide
+
+Objective:
+The goal of Go is to control more territory than your opponent by strategically placing stones on the board.
+
+Board:
+
+Go is typically played on a 19x19 grid, although beginners may start on smaller boards like 9x9 or 13x13 to learn the basics.
+Players take turns placing their stones on the intersections of the lines.
+Stones: We are using a 9x9 board.
+
+There are two types of stones: black and white.
+Black plays first, and then turns alternate.
+
+
+Gameplay:
+
+Opening: The game usually starts with an empty board. Players take turns placing one stone at a time on any unoccupied intersection.
+
+Capturing: When a stone or group of stones becomes surrounded by the opponent's stones, it is captured and removed from the board. Stones are captured when they no longer have any liberties (empty adjacent intersections).
+
+Liberties: A single stone or a group of stones must have at least one liberty to remain on the board. Liberties are empty adjacent intersections. A group of stones shares its liberties.
+
+Ko Rule: The Ko rule is in effect to prevent an endless repetition of moves. If a move creates the same board position as the previous turn, it is illegal.
+
+Passing: Instead of placing a stone on their turn, a player may choose to pass. If both players pass consecutively, the game ends, and territory is counted.
+
+
+Capturing Stones: When a stone or group of stones is entirely surrounded by the opponent's stones, it is captured and removed from the board.
+
+Connecting Stones: To prevent your stones from getting captured, you should try to connect them. Connecting stones form a group, and as long as the group has at least one liberty (empty adjacent intersection), it remains on the board.
+
+Creating Liberties: During the game, players extend their influence by creating groups with multiple liberties. More liberties make it harder for the opponent to capture those stones.
+
+Capturing Races: Sometimes, capturing stones can lead to tactical races where players attempt to capture each other's stones in a sequence of moves. These situations can be quite exciting and require careful calculation.
+
+Sacrifice Stones: In some cases, sacrificing a stone or a group of stones strategically can help you gain a better position elsewhere on the board.
+
+ 
+
+
+Capturing Stones (Examples):
+ 
+If one stone is surrounded by the opponent's stones, it is captured and removed from the board.
+If a group of stones is surrounded with one liberty, it is captured.
+
+--------
+| . . . |
+| . X X |
+| . X . |
+| . X . |
+--------
+
+In this example, the single black stone has no liberties and would be removed from the board.
+
+--------
+| . . . |
+| X X . |
+| X . . |
+| X . . |
+--------
+
+
+In this example, the group of three black stones has one liberty, but if the white stone plays at the empty intersection, the black stones will be captured.
+The black stones are connected, forming a group. They share their liberties, and as a result, they have two liberties at the empty intersections. As long as these black stones have one or more liberties, they are not in immediate danger of being captured.
+
+--------
+| . . . |
+| . X X |
+| X X . |
+| . . . |
+--------
+
+ 
+  passing is to end game
+
+  // example the better move because of the liberties, because of the other stone will help its liberties
+   // second move needs to show for alll moves not just two before the stone is capture 
+  // make stones their colors and fix ai move select not 
+  
+// say why move was suggestion , move suggestion 
+
+capture , to look ahead and not do this stone capture but to look ahead and see what is optimal strategy . itsnt just gettig a liberty for the stone i am trying to capture. 
+dont play that move but pick, it might hurt
+ 
