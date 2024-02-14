@@ -249,7 +249,7 @@ public class CaptureHelper {
             }
         }
         return groupLiberties;
-    }
+    }c
 
     public static List<int[]> detectPotentialEyesForGroup(List<int[]> group, char player, int size, char[][] board) {
         List<int[]> potentialEyes = new ArrayList<>();
