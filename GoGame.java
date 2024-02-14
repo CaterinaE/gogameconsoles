@@ -1,13 +1,14 @@
- import java.util.ArrayList;
+import java.util.ArrayList;
 import java.util.Arrays;
- import java.util.List;
+import java.util.Collections;
+import java.util.List;
 import java.util.Scanner;
- 
+
 public class GoGame {
     private int stonesCapturedX, stonesCapturedO, consecutivePasses;
     private static char currentPlayer;
     private boolean gameEnded;
-     private static char[][] previousBoard; // keep track of previous board positions
+    private static char[][] previousBoard; // keep track of previous board positions
     private String patternName;
     public Board boardInstance;
     public static int size;
@@ -21,7 +22,8 @@ public class GoGame {
         previousBoard = new char[size][size];
     }
 
-    // ---------the menu------------------------------------------------------------------
+    // ---------the
+    // menu------------------------------------------------------------------
     public void play() {
         Scanner scanner = new Scanner(System.in);
 
@@ -78,8 +80,8 @@ public class GoGame {
                             break;
                         case 2:
                             // Call provideCaptureHelpAI with the current player before making any move
-                            CaptureHelper.provideCaptureHelpAI(scanner, currentPlayer, size, board);  
-                                                                                                    
+                            CaptureHelper.provideCaptureHelpAI(scanner, currentPlayer, size, board);
+
                             break;
                         case 3:
                             System.out.println("Exiting AI Help.");
@@ -141,7 +143,8 @@ public class GoGame {
 
         scanner.close();
     }
-    // ------------------end of menu--------------------------------------------------------------------------------
+    // ------------------end of
+    // menu--------------------------------------------------------------------------------
 
     // This method is used by the AI helper
     private static boolean hasLibertyAIHelper(int row, int col, char player, boolean[][] visited, char[][] tempBoard) {
@@ -167,7 +170,7 @@ public class GoGame {
 
     // --------------the rules of go--------------------------
 
-    // New method: isKoRuleViolation
+    //  isKoRuleViolation the ko rule for game
     static boolean isKoRuleViolation(int row, int col, char[][] tempBoard) {
         char player = tempBoard[row][col];
 
@@ -187,7 +190,7 @@ public class GoGame {
         return false;
     }
 
-    // New method: countEyes
+    // countEyes is used in the ai helper move suggustion
     static int countEyes(char[][] tempBoard) {
         int eyeCount = 0;
 
@@ -204,7 +207,7 @@ public class GoGame {
         return eyeCount;
     }
 
-    // New method: isEye
+    // isEye is used in the ai helper move suggustion
     private static boolean isEye(int row, int col, char player, char[][] tempBoard) {
         // Check if the position is empty
         if (tempBoard[row][col] != '.') {
@@ -234,13 +237,17 @@ public class GoGame {
         List<int[]> stoneGroup = getGroupOfStones(row, col, opponentPlayer);
 
         // Generate capturing moves against the group
-        List<int[]> capturingMoves = CaptureHelper.generateCapturingMoves(tempBoard, currentPlayer, stoneGroup, size);
+        List<int[]> capturingMoves = generateCapturingMoves(tempBoard, currentPlayer, stoneGroup, size);
+        Collections.sort(capturingMoves, (move1, move2) -> Integer.compare(move2[3], move1[3]));
 
         System.out.println("\nCapturing Moves:");
-
         for (int[] move : capturingMoves) {
+            row = move[0];
+            col = move[1];
+            int opponentLiberties = calculateOpponentLiberties(row, col, opponentPlayer, size, board);
 
-            System.out.println("Row: " + move[0] + ", Col: " + move[1]);
+            System.out.println("Row: " + row + ", Col: " + col +
+                    " Opponent's Liberties: " + opponentLiberties);
         }
         System.out.println();
 
@@ -269,8 +276,56 @@ public class GoGame {
             System.out.println("AI suggests placing a stone at row " + r + ", col " + c +
                     " to capture " + bestMove[2] + " stone(s) and limit opponent's liberties.");
         } else {
-            //System.out.println("AI couldn't find a suitable move to capture the specified stone group.");
+           // System.out.println("AI couldn't find a suitable move to capture the specified stone group.");
         }
+    }
+
+    static int calculateOpponentLiberties(int row, int col, char opponentPlayer, int size, char[][] board) {
+        int liberties = 0;
+        int[][] surroundingPositions = { { -1, 0 }, { 1, 0 }, { 0, -1 }, { 0, 1 } }; // Adjacent positions
+
+        for (int[] position : surroundingPositions) {
+            int r = row + position[0];
+            int c = col + position[1];
+
+            if (r >= 0 && r < size && c >= 0 && c < size && board[r][c] == '.') {
+                liberties++;
+            }
+        }
+
+        return liberties;
+    }
+
+    static List<int[]> generateCapturingMoves(char[][] tempBoard, char currentPlayer, List<int[]> stoneGroup,
+            int size) {
+        List<int[]> capturingMoves = new ArrayList<>();
+
+        for (int[] stone : stoneGroup) {
+            int row = stone[0];
+            int col = stone[1];
+
+            int[][] surroundingPositions = { { row - 1, col }, { row + 1, col }, { row, col - 1 }, { row, col + 1 } };
+            for (int[] position : surroundingPositions) {
+                int r = position[0];
+                int c = position[1];
+
+                if (r >= 0 && r < size && c >= 0 && c < size && tempBoard[r][c] == '.') {
+                    char[][] newTempBoard = new char[size][size];
+                    for (int i = 0; i < size; i++) {
+                        newTempBoard[i] = Arrays.copyOf(tempBoard[i], size);
+                    }
+                    newTempBoard[r][c] = currentPlayer;
+                    int newCapturedStones = GoGame.simulateCaptureStones(r, c, newTempBoard);
+                    int opponentLiberties = calculateOpponentLiberties(row, col, currentPlayer, size, board);
+                    capturingMoves.add(new int[] { r, c, newCapturedStones, opponentLiberties });
+                }
+            }
+        }
+
+        // Sort capturing moves based on opponent's liberties (descending order)
+        capturingMoves.sort((move1, move2) -> Integer.compare(move2[3], move1[3]));
+
+        return capturingMoves;
     }
 
     private static int[] findBestCaptureMoveForGroup(char[][] board, List<int[]> stoneGroup, int opponentCapturedStones,
@@ -296,13 +351,14 @@ public class GoGame {
     }
 
     // Method to get a group of stones for a specified location
-    private static List<int[]> getGroupOfStones(int row, int col, char player) {
+    static List<int[]> getGroupOfStones(int row, int col, char player) {
         List<int[]> group = new ArrayList<>();
         boolean[][] visited = new boolean[size][size];
         dfs(row, col, player, visited, group);
         return group;
     }
 
+    // used to help count the group of stones
     private static void dfs(int row, int col, char player, boolean[][] visited, List<int[]> group) {
         if (row < 0 || row >= size || col < 0 || col >= size || visited[row][col] || board[row][col] != player)
             return;
@@ -316,8 +372,7 @@ public class GoGame {
         dfs(row, col - 1, player, visited, group);
     }
 
-  
-    // New method: countLiberties
+    //  countLiberties , the liberties will be counted  for use of the ai helper
     static int countLiberties(char player, char[][] board) {
         int liberties = 0;
         boolean[][] visited = new boolean[size][size];
@@ -377,19 +432,17 @@ public class GoGame {
         return 0;
     }
 
- 
-public static char[][] simulateMove(char[][] board, int row, int col, char player) {
-    char[][] tempBoard = new char[board.length][board[0].length];
-    for (int i = 0; i < board.length; i++) {
-        for (int j = 0; j < board[0].length; j++) {
-            tempBoard[i][j] = board[i][j];
+    // simulate move shows the moves to make
+    public static char[][] simulateMove(char[][] board, int row, int col, char player) {
+        char[][] tempBoard = new char[board.length][board[0].length];
+        for (int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board[0].length; j++) {
+                tempBoard[i][j] = board[i][j];
+            }
         }
+        tempBoard[row][col] = player;
+        return tempBoard;
     }
-    tempBoard[row][col] = player;
-    return tempBoard;
-}
-
-
 
     // Evaluate the board state based on the number of opponent's stones
     static int evaluateBoard(char[][] board, char player) {
@@ -407,40 +460,38 @@ public static char[][] simulateMove(char[][] board, int row, int col, char playe
         return opponentStones;
     }
 
-    // ----- end of capture heler ai section-----------
-// New method: simulateCaptureStones ai helper
-static int simulateCaptureStones(int row, int col, char[][] tempBoard) {
-    char opponentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
+    // simulateCaptureStones for the ai helpers
+    static int simulateCaptureStones(int row, int col, char[][] tempBoard) {
+        char opponentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
 
-    int capturedStones = 0;
-    List<int[]> adjacentOpponentStones = new ArrayList<>();
+        int capturedStones = 0;
+        List<int[]> adjacentOpponentStones = new ArrayList<>();
 
-    // Place the current player's stone on the board.
-     tempBoard[row][col] = currentPlayer;
+        // Place the current player's stone on the board.
+        tempBoard[row][col] = currentPlayer;
 
-    if (row > 0 && tempBoard[row - 1][col] == opponentPlayer) {
-        adjacentOpponentStones.add(new int[] { row - 1, col });
-    }
-    if (row < size - 1 && tempBoard[row + 1][col] == opponentPlayer) {
-        adjacentOpponentStones.add(new int[] { row + 1, col });
-    }
-    if (col > 0 && tempBoard[row][col - 1] == opponentPlayer) {
-        adjacentOpponentStones.add(new int[] { row, col - 1 });
-    }
-    if (col < size - 1 && tempBoard[row][col + 1] == opponentPlayer) {
-        adjacentOpponentStones.add(new int[] { row, col + 1 });
-    }
-
-    boolean[][] visited = new boolean[size][size];
-    for (int[] stone : adjacentOpponentStones) {
-        if (!visited[stone[0]][stone[1]] && isGroupCaptured(stone[0], stone[1], tempBoard)) {
-            capturedStones += simulateRemoveCapturedStones(stone[0], stone[1], tempBoard);
+        if (row > 0 && tempBoard[row - 1][col] == opponentPlayer) {
+            adjacentOpponentStones.add(new int[] { row - 1, col });
         }
+        if (row < size - 1 && tempBoard[row + 1][col] == opponentPlayer) {
+            adjacentOpponentStones.add(new int[] { row + 1, col });
+        }
+        if (col > 0 && tempBoard[row][col - 1] == opponentPlayer) {
+            adjacentOpponentStones.add(new int[] { row, col - 1 });
+        }
+        if (col < size - 1 && tempBoard[row][col + 1] == opponentPlayer) {
+            adjacentOpponentStones.add(new int[] { row, col + 1 });
+        }
+
+        boolean[][] visited = new boolean[size][size];
+        for (int[] stone : adjacentOpponentStones) {
+            if (!visited[stone[0]][stone[1]] && isGroupCaptured(stone[0], stone[1], tempBoard)) {
+                capturedStones += simulateRemoveCapturedStones(stone[0], stone[1], tempBoard);
+            }
+        }
+
+        return capturedStones;
     }
-
-    return capturedStones;
-}
-
 
     static boolean isValidMove(int row, int col) {
         if (row < 0 || row >= size || col < 0 || col >= size) {
@@ -495,7 +546,7 @@ static int simulateCaptureStones(int row, int col, char[][] tempBoard) {
                 || hasLiberty(row, col + 1, player, visited);
     }
 
-    // New method: isGroupCaptured with correct parameters
+    // isGroupCaptured with correct parameters
     private static boolean isGroupCaptured(int row, int col, char[][] tempBoard) {
         char player = tempBoard[row][col];
         boolean[][] visited = new boolean[size][size];
@@ -541,7 +592,6 @@ static int simulateCaptureStones(int row, int col, char[][] tempBoard) {
             stonesCapturedO += stonesCaptured;
         }
     }
-
 
     private int removeCapturedStones(int row, int col) {
         char player = board[row][col];

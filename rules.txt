@@ -1,17 +1,21 @@
 
-How to Play Go: A Basic Guide
+How to Play Go: A Game Guide
 
 Objective:
 The goal of Go is to control more territory than your opponent by strategically placing stones on the board.
 
 Board:
 
-Go is typically played on a 19x19 grid, although beginners may start on smaller boards like 9x9 or 13x13 to learn the basics.
+Go is typically played on a 19x19 grid, beginners can start on smaller boards like 9x9 or 13x13 to learn the basics.
+9x9 board  is being usedfor this Go game.
+
 Players take turns placing their stones on the intersections of the lines.
-Stones: We are using a 9x9 board.
+
+
+Stones: 
 
 There are two types of stones: black and white.
-Black plays first, and then turns alternate.
+Black plays first, and then turns alternate. Black is O and White is X for the console input. 
 
 
 Gameplay:
@@ -71,16 +75,4 @@ The black stones are connected, forming a group. They share their liberties, and
 | X X . |
 | . . . |
 --------
-
- 
-  passing is to end game
-
-  // example the better move because of the liberties, because of the other stone will help its liberties
-   // second move needs to show for alll moves not just two before the stone is capture 
-  // make stones their colors and fix ai move select not 
-  
-// say why move was suggestion , move suggestion 
-
-capture , to look ahead and not do this stone capture but to look ahead and see what is optimal strategy . itsnt just gettig a liberty for the stone i am trying to capture. 
-dont play that move but pick, it might hurt
  
