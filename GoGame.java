@@ -11,7 +11,7 @@ public class GoGame {
     private static char[][] previousBoard; // keep track of previous board positions
     private String patternName;
     public Board boardInstance;
-    public static int size;
+    public static int size;cdd
     public static char[][] board;
 
     public GoGame(int size) {
