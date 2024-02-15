@@ -10,13 +10,13 @@ public class Board {
     //default board is blank 
 public static void initializeWithPredefinedBoard(char[][] board, int size) { 
         size = 9;
-      GoGame.board = new char[][]   {
+      GoGame12.board = new char[][]   {
               
          
-              {'.', '.', '.', '.', '.', '.', '.', '.', '.'},
             {'.', '.', '.', 'X', 'O', '.', '.', '.', '.'},
-            {'.', '.', '.', 'O', 'X', '.', '.', '.', '.'},
-            {'.', '.', '.', '.', '.', '.', '.', '.', '.'},
+            {'.', 'x', 'X', 'X', 'O', '.', '.', '.', '.'},
+            {'.', 'O', 'X', 'O', 'O', '.', '.', '.', '.'},
+            {'.', 'X', '.', '.', '.', '.', '.', '.', '.'},
             {'.', '.', '.', '.', '.', '.', '.', '.', '.'},
             {'.', '.', '.', '.', '.', '.', '.', '.', '.'},
             {'.', '.', '.', '.', '.', '.', '.', '.', '.'},
@@ -29,10 +29,10 @@ public static void initializeWithPredefinedBoard(char[][] board, int size) {
 
 public static void initializeManually(Scanner scanner, char[][] board, int size) { 
         System.out.println("Enter the initial board state (use '.' for empty spaces, 'X' for White, 'O' for Black):");
-      for (int i = 0; i < GoGame.size; i++) {
+      for (int i = 0; i < GoGame12.size; i++) {
     String rowInput = scanner.next();
-    for (int j = 0; j < GoGame.size; j++) {
-        GoGame.board[i][j] = rowInput.charAt(j);
+    for (int j = 0; j < GoGame12.size; j++) {
+        GoGame12.board[i][j] = rowInput.charAt(j);
     }
 }
 
@@ -76,7 +76,7 @@ public static void initializeFromFile(char[][] board, int size) {
         for (int i = 0; i < size && i < chosenPattern.length; i++) {
             String rowInput = chosenPattern[i];
             for (int j = 0; j < size && j < rowInput.length(); j++) {
-                GoGame.board[i][j] = rowInput.charAt(j);
+                GoGame12.board[i][j] = rowInput.charAt(j);
             }
         }
         
