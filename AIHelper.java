@@ -14,14 +14,14 @@ public class AIHelper {
      // Simulate placing a stone on each empty position and calculate the score
     for (int row = 0; row < size; row++) {
         for (int col = 0; col < size; col++) {
-             if (board[row][col] == '.' && GoGame12.isValidMove(row, col)) {
+             if (board[row][col] == '.' && GoGame.isValidMove(row, col)) {
                 char[][] tempBoard = new char[size][size];
                 for (int i = 0; i < size; i++) {
                     tempBoard[i] = Arrays.copyOf(board[i], size);
                 }
                 tempBoard[row][col] = currentPlayer;
-                int capturedStones =  GoGame12.simulateCaptureStones(row, col, tempBoard);
-                int eyeCount =  GoGame12.countEyes(tempBoard);
+                int capturedStones =  GoGame.simulateCaptureStones(row, col, tempBoard);
+                int eyeCount =  GoGame.countEyes(tempBoard);
 
                 // Calculate a score based on the number of captured stones, eye count, and position on the board
                 int positionWeight;

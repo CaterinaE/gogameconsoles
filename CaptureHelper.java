@@ -57,17 +57,17 @@ public class CaptureHelper {
             int r = move[0];
             int c = move[1];
 
-            if (GoGame12.isValidMove(r, c)) { // Check if the move is valid (including Ko rule)
+            if (GoGame.isValidMove(r, c)) { // Check if the move is valid (including Ko rule)
                 // Simulate making the move
                 char[][] newTempBoard = new char[size][size];
                 for (int i = 0; i < size; i++) {
                     newTempBoard[i] = Arrays.copyOf(tempBoard[i], size);
                 }
                 newTempBoard[r][c] = currentPlayer;
-                int newCapturedStones = GoGame12.simulateCaptureStones(r, c, newTempBoard);
+                int newCapturedStones = GoGame.simulateCaptureStones(r, c, newTempBoard);
 
                 // Count liberties for the opponent after making the move
-                int opponentLiberties = GoGame12.countLiberties(opponentPlayer, newTempBoard);
+                int opponentLiberties = GoGame.countLiberties(opponentPlayer, newTempBoard);
 
                 // Update the best move based on the maximized captured stones and minimized
                 // liberties
@@ -96,10 +96,10 @@ public class CaptureHelper {
             int libertyRow = Integer.parseInt(libertyCoordinates[0]);
             int libertyCol = Integer.parseInt(libertyCoordinates[1]);
 
-            if (GoGame12.isValidMove(libertyRow, libertyCol)) {
+            if (GoGame.isValidMove(libertyRow, libertyCol)) {
                 // Simulate making the first move
-                char[][] newTempBoard = GoGame12.simulateMove(tempBoard, libertyRow, libertyCol, currentPlayer);
-                int newCapturedStones = GoGame12.simulateCaptureStones(libertyRow, libertyCol, newTempBoard);
+                char[][] newTempBoard = GoGame.simulateMove(tempBoard, libertyRow, libertyCol, currentPlayer);
+                int newCapturedStones = GoGame.simulateCaptureStones(libertyRow, libertyCol, newTempBoard);
 
                 // Use the minimax method to find the best second move
                 int[] minimaxMove = minimax(newTempBoard, 4, true, currentPlayer, size, row, col); // 4 depth search
@@ -129,8 +129,8 @@ public class CaptureHelper {
             }
         }
 
-        GoGame12.blockPotentialEyes(tempBoard, currentPlayer, row, col);
-        int capturedStones = GoGame12.simulateCaptureStones(row, col, tempBoard);
+        GoGame.blockPotentialEyes(tempBoard, currentPlayer, row, col);
+        int capturedStones = GoGame.simulateCaptureStones(row, col, tempBoard);
 
         // fix the eyes
         if (bestFirstMove[0] != -1 && bestFirstMove[1] != -1) {
@@ -168,7 +168,7 @@ public class CaptureHelper {
                         newTempBoard[i] = Arrays.copyOf(tempBoard[i], size);
                     }
                     newTempBoard[r][c] = currentPlayer;
-                    int newCapturedStones = GoGame12.simulateCaptureStones(r, c, newTempBoard);
+                    int newCapturedStones = GoGame.simulateCaptureStones(r, c, newTempBoard);
 
                     // Create a unique string representation of the move
                     String moveStr = r + "," + c + "," + newCapturedStones;
@@ -191,8 +191,8 @@ public class CaptureHelper {
         for (int row = 0; row < size; row++) {
             for (int col = 0; col < size; col++) {
                 if (board[row][col] == '.') {
-                    char[][] tempBoard = GoGame12.simulateMove(board, row, col, currentPlayer);
-                    int capturedStones = GoGame12.simulateCaptureStones(row, col, tempBoard);
+                    char[][] tempBoard = GoGame.simulateMove(board, row, col, currentPlayer);
+                    int capturedStones = GoGame.simulateCaptureStones(row, col, tempBoard);
 
                     if (capturedStones > bestMove[2] && capturedStones > opponentCapturedStones) {
                         bestMove[0] = row;
@@ -335,7 +335,7 @@ public class CaptureHelper {
 
                 newTempBoard[i][j] = isMaximizing ? currentPlayer : opponentPlayer;
 
-                int capturedStones = GoGame12.simulateCaptureStones(i, j, newTempBoard);
+                int capturedStones = GoGame.simulateCaptureStones(i, j, newTempBoard);
                 int currentScore = isMaximizing ? capturedStones : -capturedStones;
                 ;
                 if (isMaximizing && currentScore > bestScore) {

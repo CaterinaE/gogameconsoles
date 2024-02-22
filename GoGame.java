@@ -11,7 +11,7 @@ public class GoGame {
     private static char[][] previousBoard; // keep track of previous board positions
     private String patternName;
     public Board boardInstance;
-    public static int size;cdd
+    public static int size;
     public static char[][] board;
 
     public GoGame(int size) {
@@ -616,37 +616,7 @@ public class GoGame {
 
     // ------------------- these arent used for the ai these show the update of
     // capture stones-----------------
-
-    private void printBoard() {
-        // Print the pattern name if available
-        if (patternName != null) {
-            System.out.println(patternName);
-        }
-
-        System.out.print("  ");
-        for (int k = 0; k < size; k++) {
-            System.out.print(k + " ");
-        }
-        System.out.println();
-
-        for (int i = 0; i < size; i++) {
-            System.out.print(i + " ");
-
-            for (int j = 0; j < size; j++) {
-                if (board[i][j] == 'X') {
-                    System.out.print("● "); // Smaller circle for white stone
-                } else if (board[i][j] == 'O') {
-                    System.out.print("◯ "); // Smaller filled circle for black stone
-                } else {
-                    System.out.print("· "); // Using dot for empty space
-                }
-            }
-
-            System.out.println();
-        }
-
-        System.out.println("White (X) Stones Captured: " + stonesCapturedX);
-        System.out.println("Black (O) Stones Captured: " + stonesCapturedO);
+ private void printBoard() {
+        boardInstance.printBoard();
     }
-
 }
