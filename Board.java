@@ -6,15 +6,44 @@ import java.io.File;
 import java.io.FileNotFoundException;
 
 public class Board {
-  
+   private char[][] board;
+    private int size;
+
+    public Board(char[][] board, int size) {
+        this.board = board;
+        this.size = size;
+    }
+
+    public void printBoard() {
+        System.out.print("  ");
+        for (int k = 0; k < size; k++) {
+            System.out.print(k + " ");
+        }
+        System.out.println();
+
+        for (int i = 0; i < size; i++) {
+            System.out.print(i + " ");
+
+            for (int j = 0; j < size; j++) {
+                if (board[i][j] == 'X') {
+                    System.out.print("● "); // Smaller circle for white stone
+                } else if (board[i][j] == 'O') {
+                    System.out.print("◯ "); // Smaller filled circle for black stone
+                } else {
+                    System.out.print("· "); // Using dot for empty space
+                }
+            }
+
+            System.out.println();
+        }}
     //default board is blank 
 public static void initializeWithPredefinedBoard(char[][] board, int size) { 
         size = 9;
-      GoGame12.board = new char[][]   {
+     board = new char[][]   {
               
          
             {'.', '.', '.', 'X', 'O', '.', '.', '.', '.'},
-            {'.', 'x', 'X', 'X', 'O', '.', '.', '.', '.'},
+            {'.', '.', 'X', 'X', 'O', '.', '.', '.', '.'},
             {'.', 'O', 'X', 'O', 'O', '.', '.', '.', '.'},
             {'.', 'X', '.', '.', '.', '.', '.', '.', '.'},
             {'.', '.', '.', '.', '.', '.', '.', '.', '.'},
@@ -29,10 +58,10 @@ public static void initializeWithPredefinedBoard(char[][] board, int size) {
 
 public static void initializeManually(Scanner scanner, char[][] board, int size) { 
         System.out.println("Enter the initial board state (use '.' for empty spaces, 'X' for White, 'O' for Black):");
-      for (int i = 0; i < GoGame12.size; i++) {
+      for (int i = 0; i < GoGame.size; i++) {
     String rowInput = scanner.next();
-    for (int j = 0; j < GoGame12.size; j++) {
-        GoGame12.board[i][j] = rowInput.charAt(j);
+    for (int j = 0; j < GoGame.size; j++) {
+        GoGame.board[i][j] = rowInput.charAt(j);
     }
 }
 
@@ -76,7 +105,7 @@ public static void initializeFromFile(char[][] board, int size) {
         for (int i = 0; i < size && i < chosenPattern.length; i++) {
             String rowInput = chosenPattern[i];
             for (int j = 0; j < size && j < rowInput.length(); j++) {
-                GoGame12.board[i][j] = rowInput.charAt(j);
+                GoGame.board[i][j] = rowInput.charAt(j);
             }
         }
         
@@ -84,7 +113,9 @@ public static void initializeFromFile(char[][] board, int size) {
         System.out.println("Failed to load the file. Initializing with a predefined board instead.");
         initializeWithPredefinedBoard(board, size);
     }
-}}
+}
+
+}
  
 
 /*  {'.', '.', '.', 'X', 'O', '.', '.', '.', '.'},
