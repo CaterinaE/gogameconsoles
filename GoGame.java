@@ -1,7 +1,6 @@
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+ import java.util.List;
 import java.util.Scanner;
 
 public class GoGame {
@@ -230,55 +229,6 @@ public class GoGame {
         return isSurrounded;
     }
 
-    static void blockPotentialEyes(char[][] tempBoard, char currentPlayer, int row, int col) {
-        char opponentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
-
-        // Detect the group of stones connected to the given stone
-        List<int[]> stoneGroup = getGroupOfStones(row, col, opponentPlayer);
-
-        // Generate capturing moves against the group
-        List<int[]> capturingMoves = generateCapturingMoves(tempBoard, currentPlayer, stoneGroup, size);
-        Collections.sort(capturingMoves, (move1, move2) -> Integer.compare(move2[3], move1[3]));
-
-        System.out.println("\nCapturing Moves:");
-        for (int[] move : capturingMoves) {
-            row = move[0];
-            col = move[1];
-            int opponentLiberties = calculateOpponentLiberties(row, col, opponentPlayer, size, board);
-
-            System.out.println("Row: " + row + ", Col: " + col +
-                    " Opponent's Liberties: " + opponentLiberties);
-        }
-        System.out.println();
-
-        // Choose the best capturing move
-        int[] bestMove = findBestCaptureMoveForGroup(tempBoard, stoneGroup, 0, currentPlayer);
-        List<int[]> potentialEyes = CaptureHelper.detectPotentialEyesForGroup(stoneGroup, currentPlayer, size, board);
-
-        // Print the stone group in a readable format
-        System.out.println("\nStone Group: ");
-        for (int[] stone : stoneGroup) {
-            System.out.print("[" + stone[0] + ", " + stone[1] + "] ");
-        }
-        System.out.println();
-
-        // Print potential eyes
-        System.out.println("\nPotential Eyes:");
-        for (int[] eye : potentialEyes) {
-            System.out.println("Row: " + eye[0] + ", Col: " + eye[1]);
-        }
-        System.out.println();
-
-        if (bestMove[0] != -1 && bestMove[1] != -1) {
-            int r = bestMove[0];
-            int c = bestMove[1];
-            tempBoard[r][c] = currentPlayer;
-            System.out.println("AI suggests placing a stone at row " + r + ", col " + c +
-                    " to capture " + bestMove[2] + " stone(s) and limit opponent's liberties.");
-        } else {
-           // System.out.println("AI couldn't find a suitable move to capture the specified stone group.");
-        }
-    }
 
     static int calculateOpponentLiberties(int row, int col, char opponentPlayer, int size, char[][] board) {
         int liberties = 0;
@@ -295,61 +245,7 @@ public class GoGame {
 
         return liberties;
     }
-
-    static List<int[]> generateCapturingMoves(char[][] tempBoard, char currentPlayer, List<int[]> stoneGroup,
-            int size) {
-        List<int[]> capturingMoves = new ArrayList<>();
-
-        for (int[] stone : stoneGroup) {
-            int row = stone[0];
-            int col = stone[1];
-
-            int[][] surroundingPositions = { { row - 1, col }, { row + 1, col }, { row, col - 1 }, { row, col + 1 } };
-            for (int[] position : surroundingPositions) {
-                int r = position[0];
-                int c = position[1];
-
-                if (r >= 0 && r < size && c >= 0 && c < size && tempBoard[r][c] == '.') {
-                    char[][] newTempBoard = new char[size][size];
-                    for (int i = 0; i < size; i++) {
-                        newTempBoard[i] = Arrays.copyOf(tempBoard[i], size);
-                    }
-                    newTempBoard[r][c] = currentPlayer;
-                    int newCapturedStones = GoGame.simulateCaptureStones(r, c, newTempBoard);
-                    int opponentLiberties = calculateOpponentLiberties(row, col, currentPlayer, size, board);
-                    capturingMoves.add(new int[] { r, c, newCapturedStones, opponentLiberties });
-                }
-            }
-        }
-
-        // Sort capturing moves based on opponent's liberties (descending order)
-        capturingMoves.sort((move1, move2) -> Integer.compare(move2[3], move1[3]));
-
-        return capturingMoves;
-    }
-
-    private static int[] findBestCaptureMoveForGroup(char[][] board, List<int[]> stoneGroup, int opponentCapturedStones,
-            char currentPlayer) {
-        int[] bestMove = new int[] { -1, -1, 0 }; // {row, col, capturedStones}
-
-        for (int[] stone : stoneGroup) {
-            int row = stone[0];
-            int col = stone[1];
-
-            if (board[row][col] == '.') {
-                char[][] tempBoard = simulateMove(board, row, col, currentPlayer);
-                int capturedStones = simulateCaptureStones(row, col, tempBoard);
-
-                if (capturedStones > bestMove[2] && capturedStones > opponentCapturedStones) {
-                    bestMove[0] = row;
-                    bestMove[1] = col;
-                    bestMove[2] = capturedStones;
-                }
-            }
-        }
-        return bestMove;
-    }
-
+ 
     // Method to get a group of stones for a specified location
     static List<int[]> getGroupOfStones(int row, int col, char player) {
         List<int[]> group = new ArrayList<>();
@@ -614,9 +510,45 @@ public class GoGame {
         return 0;
     }
 
+
+
+
+
+
+
     // ------------------- these arent used for the ai these show the update of
     // capture stones-----------------
- private void printBoard() {
-        boardInstance.printBoard();
+
+    private void printBoard() {
+        // Print the pattern name if available
+        if (patternName != null) {
+            System.out.println(patternName);
+        }
+
+        System.out.print("  ");
+        for (int k = 0; k < size; k++) {
+            System.out.print(k + " ");
+        }
+        System.out.println();
+
+        for (int i = 0; i < size; i++) {
+            System.out.print(i + " ");
+
+            for (int j = 0; j < size; j++) {
+                if (board[i][j] == 'X') {
+                    System.out.print("● "); // Smaller circle for white stone
+                } else if (board[i][j] == 'O') {
+                    System.out.print("◯ "); // Smaller filled circle for black stone
+                } else {
+                    System.out.print("· "); // Using dot for empty space
+                }
+            }
+
+            System.out.println();
+        }
+
+        System.out.println("White (X) Stones Captured: " + stonesCapturedX);
+        System.out.println("Black (O) Stones Captured: " + stonesCapturedO);
     }
+
 }
