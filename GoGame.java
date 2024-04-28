@@ -145,6 +145,9 @@ public class GoGame {
     // ------------------end of
     // menu--------------------------------------------------------------------------------
 
+
+
+    
     // This method is used by the AI helper
     private static boolean hasLibertyAIHelper(int row, int col, char player, boolean[][] visited, char[][] tempBoard) {
         if (row < 0 || row >= size || col < 0 || col >= size || visited[row][col]) {

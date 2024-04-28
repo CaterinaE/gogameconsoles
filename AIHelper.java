@@ -51,6 +51,10 @@ public class AIHelper {
     } else {
         System.out.println("AI coudn't suggust a turn.");
     }
+
+
+
+    
 }
 
 

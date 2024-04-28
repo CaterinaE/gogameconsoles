@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
@@ -81,6 +82,14 @@ public class CaptureHelper {
             }
         }
 
+
+
+
+
+
+
+
+        
         // Find group liberties using the new approach
         Set<String> groupLiberties = findGroupLiberties(row, col, opponentPlayer, size, board);
 
@@ -128,9 +137,9 @@ public class CaptureHelper {
                 }
             }
         }
-
-        GoGame.blockPotentialEyes(tempBoard, currentPlayer, row, col);
-        int capturedStones = GoGame.simulateCaptureStones(row, col, tempBoard);
+   
+       blockPotentialEyes(tempBoard, currentPlayer, row, col,size,board);
+     //  int capturedStones = GoGame.simulateCaptureStones(row, col, tempBoard);
 
         // fix the eyes
         if (bestFirstMove[0] != -1 && bestFirstMove[1] != -1) {
@@ -140,50 +149,167 @@ public class CaptureHelper {
             if (bestSecondMove[0] != -1 && bestSecondMove[1] != -1) {
                 System.out.println("Your best next move is at row " + bestSecondMove[0] + ", col " + bestSecondMove[1] +
                         " to capture " + bestSecondMove[2] + " stone(s) and limit opponent's liberties.");
-            } else {
+            } 
+            
+            else {
+                
                 //System.out.println("AI couldn't find a capture move for the specified stone.");
             }
-        } else {
+        }
+        
+        else {
+
             System.out.println("AI couldn't find a capture move for the specified stone.");
         }
     }
 
-    public static List<int[]> generateCapturingMoves(char[][] tempBoard, char currentPlayer, List<int[]> stoneGroup,
-            int size) {
-        Set<String> uniqueMoves = new HashSet<>(); // Keep track of unique moves
+
+
+  //--- this will tell the player if the other player has an eye or will  
+    static void blockPotentialEyes(char[][] tempBoard, char currentPlayer, int row, int col, int size, char[][] board) {
+        char opponentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
+
+        // Detect the group of stones connected to the given stone
+        List<int[]> stoneGroup =  GoGame.getGroupOfStones(row, col, opponentPlayer);
+
+        // Generate capturing moves against the group
+        List<int[]> capturingMoves =  generateCapturingMoves(tempBoard, currentPlayer, stoneGroup, size);
+        Collections.sort(capturingMoves, (move1, move2) -> Integer.compare(move2[3], move1[3]));
+
+        System.out.println("\nCapturing Moves:");
+        for (int[] move : capturingMoves) {
+            row = move[0];
+            col = move[1];
+            int opponentLiberties = GoGame.calculateOpponentLiberties(row, col, opponentPlayer, size, board);
+
+            System.out.println("Row: " + row + ", Col: " + col +
+                    " Opponent's Liberties: " + opponentLiberties);
+        }
+        System.out.println();
+
+        // Choose the best capturing move
+        int[] bestMove = findBestCaptureMoveForGroup(tempBoard, stoneGroup, 0, currentPlayer);
+        List<int[]> potentialEyes = CaptureHelper.detectPotentialEyesForGroup(stoneGroup, currentPlayer, size, board);
+
+        // Print the stone group in a readable format
+        System.out.println("\nStone Group: ");
+        for (int[] stone : stoneGroup) {
+            System.out.print("[" + stone[0] + ", " + stone[1] + "] ");
+        }
+        System.out.println();
+
+        // Print potential eyes
+        System.out.println("\nPotential Eyes:");
+        for (int[] eye : potentialEyes) {
+            System.out.println("Row: " + eye[0] + ", Col: " + eye[1]);
+        }
+        System.out.println();
+
+        if (bestMove[0] != -1 && bestMove[1] != -1) {
+            int r = bestMove[0];
+            int c = bestMove[1];
+            tempBoard[r][c] = currentPlayer;
+            System.out.println("AI suggests placing a stone at row " + r + ", col " + c +
+                    " to capture " + bestMove[2] + " stone(s) and limit opponent's liberties.");
+        } else {
+           // System.out.println("AI couldn't find a suitable move to capture the specified stone group.");
+        }
+    }
+
+  private static int[] findBestCaptureMoveForGroup(char[][] board, List<int[]> stoneGroup, int opponentCapturedStones,
+            char currentPlayer) {
+        int[] bestMove = new int[] { -1, -1, 0 }; // {row, col, capturedStones}
+
+        for (int[] stone : stoneGroup) {
+            int row = stone[0];
+            int col = stone[1];
+
+            if (board[row][col] == '.') {
+                char[][] tempBoard =  GoGame.simulateMove(board, row, col, currentPlayer);
+                int capturedStones =  GoGame.simulateCaptureStones(row, col, tempBoard);
+
+                if (capturedStones > bestMove[2] && capturedStones > opponentCapturedStones) {
+                    bestMove[0] = row;
+                    bestMove[1] = col;
+                    bestMove[2] = capturedStones;
+                }
+            }
+        }
+        return bestMove;
+    }
+    public static List<int[]> generateCapturingMoves(char[][] board, char currentPlayer, List<int[]> stoneGroup, int size) {
         List<int[]> capturingMoves = new ArrayList<>();
 
         for (int[] stone : stoneGroup) {
             int row = stone[0];
             int col = stone[1];
 
-            int[][] surroundingPositions = { { row - 1, col }, { row + 1, col }, { row, col - 1 }, { row, col + 1 } };
+            int[][] surroundingPositions = {{row - 1, col}, {row + 1, col}, {row, col - 1}, {row, col + 1}};
             for (int[] position : surroundingPositions) {
                 int r = position[0];
                 int c = position[1];
 
-                if (r >= 0 && r < size && c >= 0 && c < size && tempBoard[r][c] == '.') {
+                if (r >= 0 && r < size && c >= 0 && c < size && board[r][c] == '.') {
                     char[][] newTempBoard = new char[size][size];
                     for (int i = 0; i < size; i++) {
-                        newTempBoard[i] = Arrays.copyOf(tempBoard[i], size);
+                        newTempBoard[i] = Arrays.copyOf(board[i], size);
                     }
                     newTempBoard[r][c] = currentPlayer;
+                    // Note: simulateCaptureStones needs to be accessible here; consider passing it as a parameter or making it public static in GoGame
                     int newCapturedStones = GoGame.simulateCaptureStones(r, c, newTempBoard);
-
-                    // Create a unique string representation of the move
-                    String moveStr = r + "," + c + "," + newCapturedStones;
-
-                    // Only add the move if it's not already added
-                    if (!uniqueMoves.contains(moveStr)) {
-                        capturingMoves.add(new int[] { r, c, newCapturedStones });
-                        uniqueMoves.add(moveStr); // Add the move to the set
-                    }
+                    int opponentLiberties = GoGame.calculateOpponentLiberties(r, c, (currentPlayer == 'X') ? 'O' : 'X', size, board);
+                    capturingMoves.add(new int[]{r, c, newCapturedStones, opponentLiberties});
                 }
             }
         }
 
+        // Sort capturing moves based on opponent's liberties (descending order)
+        capturingMoves.sort((move1, move2) -> Integer.compare(move2[3], move1[3]));
+
         return capturingMoves;
     }
+ 
+
+// the minimax isnt working with Potential eyes
+
+
+    
+    // public static List<int[]> generateCapturingMoves(char[][] tempBoard, char currentPlayer, List<int[]> stoneGroup,
+    //         int size) {
+    //     Set<String> uniqueMoves = new HashSet<>(); // Keep track of unique moves
+    //     List<int[]> capturingMoves = new ArrayList<>();
+
+    //     for (int[] stone : stoneGroup) {
+    //         int row = stone[0];
+    //         int col = stone[1];
+
+    //         int[][] surroundingPositions = { { row - 1, col }, { row + 1, col }, { row, col - 1 }, { row, col + 1 } };
+    //         for (int[] position : surroundingPositions) {
+    //             int r = position[0];
+    //             int c = position[1];
+
+    //             if (r >= 0 && r < size && c >= 0 && c < size && tempBoard[r][c] == '.') {
+    //                 char[][] newTempBoard = new char[size][size];
+    //                 for (int i = 0; i < size; i++) {
+    //                     newTempBoard[i] = Arrays.copyOf(tempBoard[i], size);
+    //                 }
+    //                 newTempBoard[r][c] = currentPlayer;
+    //                 int newCapturedStones = GoGame.simulateCaptureStones(r, c, newTempBoard);
+
+    //                 // Create a unique string representation of the move
+    //                 String moveStr = r + "," + c + "," + newCapturedStones;
+
+    //                 // Only add the move if it's not already added
+    //                 if (!uniqueMoves.contains(moveStr)) {
+    //                     capturingMoves.add(new int[] { r, c, newCapturedStones });
+    //                     uniqueMoves.add(moveStr); // Add the move to the set
+    //                 }
+    //             }
+    //         }
+    //     }
+
+    //     return capturingMoves;
+    // }
 
     static int[] findBestCaptureMove(char[][] board, int opponentCapturedStones, char currentPlayer, int size) {
         int[] bestMove = new int[] { -1, -1, 0 }; // {row, col, capturedStones}
@@ -300,14 +426,14 @@ public class CaptureHelper {
     }
 
     // static boolean printFlag = true; // Add this flag before the loop
-    public static void printBoard(char[][] board) {
-        for (int row = 0; row < board.length; row++) {
-            for (int col = 0; col < board[0].length; col++) {
-                System.out.print(board[row][col] + " ");
-            }
-            System.out.println();
-        }
-    }
+    // public static void printBoard(char[][] board) {
+    //     for (int row = 0; row < board.length; row++) {
+    //         for (int col = 0; col < board[0].length; col++) {
+    //             System.out.print(board[row][col] + " ");
+    //         }
+    //         System.out.println();
+    //     }
+    // }
 
     public static int[] minimax(char[][] board, int depth, boolean isMaximizing, char currentPlayer, int size,
             int targetRow, int targetCol) {
